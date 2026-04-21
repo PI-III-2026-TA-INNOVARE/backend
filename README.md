@@ -421,3 +421,15 @@ Todos os endpoints requerem autenticação ✅
 | `GET` | `/api/resumes/{id}` | Buscar currículo por ID |
 | `PUT` | `/api/resumes/{id}` | Atualizar currículo |
 | `DELETE` | `/api/resumes/{id}` | Remover currículo |
+
+#### Exemplo de criação
+
+```json
+POST /api/resumes/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "skills": [6, 7]
+}
+```
