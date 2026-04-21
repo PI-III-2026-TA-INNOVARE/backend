@@ -3,6 +3,7 @@ from decouple import config
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+INSTITUTIONAL_DOMAINS_FILE = BASE_DIR / 'data' / 'world_universities_and_domains.json'
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)

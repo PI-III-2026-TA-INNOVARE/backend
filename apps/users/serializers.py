@@ -8,6 +8,10 @@ from apps.researchers.models import Researcher
 from apps.resumes.models import Resume
 from apps.universities.models import University
 from apps.users.models import User
+from apps.users.services.institutional_domains import (
+    InstitutionalDomainsUnavailable,
+    is_institutional_email_domain,
+)
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -84,6 +88,29 @@ class RegisterSerializer(serializers.Serializer):
             missing = [field for field in required if not attrs.get(field)]
             if missing:
                 raise serializers.ValidationError({field: 'Este campo é obrigatório.' for field in missing})
+
+            email = attrs.get('email', '')
+            email_domain = email.rsplit('@', 1)[-1] if '@' in email else ''
+            try:
+                is_institutional = is_institutional_email_domain(email_domain)
+            except InstitutionalDomainsUnavailable:
+                raise serializers.ValidationError(
+                    {
+                        'email': (
+                            'Nao foi possivel validar o dominio institucional no momento. '
+                            'Tente novamente mais tarde.'
+                        )
+                    }
+                )
+
+            if not is_institutional:
+                raise serializers.ValidationError(
+                    {
+                        'email': (
+                            'Para cadastro de pesquisador, utilize um e-mail institucional valido.'
+                        )
+                    }
+                )
 
         return attrs
 
