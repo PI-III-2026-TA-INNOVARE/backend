@@ -100,9 +100,82 @@ http://127.0.0.1:8000/api/docs/
 
 ## Rotas da API
 
-Todas as rotas têm o prefixo `/api/`.
+Todas as rotas têm o prefixo `/api/`. A variável `{id}` representa o identificador do recurso.
+
+Rotas marcadas com ✅ exigem o header:
+```
+Authorization: Bearer <access_token>
+```
+
+---
+
+### Users (Autenticação)
+
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `POST` | `/api/auth/register/` | ❌ | Criar usuário (pesquisador ou empresa) |
+| `POST` | `/api/auth/token/` | ❌ | Login — retorna access e refresh token |
+| `GET` | `/api/auth/profile/` | ✅ | Ver dados do usuário autenticado |
+
+#### Criar usuário — pesquisador
+
+```json
+POST /api/auth/register/
+Content-Type: application/json
+
+{
+  "email": "pesquisador@edu.br", // obrigatório e-mail institucional
+  "password": "minimo8caracteres",
+  "id_tipo": "pesquisador",
+  "name": "Pesquisador Exemplo",
+  "university": 4,
+  "resume": 4,
+  "availability": true,
+  "area": [8, 9]
+}
+```
+
+#### Criar usuário — empresa
+
+```json
+POST /api/auth/register/
+Content-Type: application/json
+
+{
+  "email": "empresa@teste.com",
+  "password": "minimo8caracteres",
+  "id_tipo": "empresa",
+  "name": "Exemplo Ltda",
+  "cnpj": "10.000.000/0001-00",
+  "registration_status": null
+}
+```
+
+#### Login
+
+```json
+POST /api/auth/token/
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "minimo8caracteres"
+}
+```
+
+**Response:**
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}
+```
+
+---
 
 ### Companies (Empresas)
+
+Todos os endpoints requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -117,6 +190,7 @@ Todas as rotas têm o prefixo `/api/`.
 
 ```json
 POST /api/companies/
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -130,6 +204,8 @@ Content-Type: application/json
 ---
 
 ### Researchers (Pesquisadores)
+
+Todos os endpoints requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -145,6 +221,7 @@ Content-Type: application/json
 
 ```json
 POST /api/researchers/
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -158,7 +235,71 @@ Content-Type: application/json
 
 ---
 
+### Research (Pesquisas)
+
+Todos os endpoints requerem autenticação ✅ (Apenas usuários do tipo empresa podem criar pesquisas)
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/research/` | Listar todas as pesquisas |
+| `POST` | `/api/research/` | Criar pesquisa |
+| `GET` | `/api/research/{id}` | Buscar pesquisa por ID |
+| `PUT` | `/api/research/{id}` | Atualizar pesquisa completa |
+| `PATCH` | `/api/research/{id}` | Atualizar pesquisa parcialmente |
+| `DELETE` | `/api/research/{id}` | Remover pesquisa |
+
+#### Exemplo de criação
+
+```json
+POST /api/research/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Análise de Estabilidade de Taludes em Áreas Urbanas",
+  "status": "Pendente",
+  "scope": "Estudo do comportamento de solos em encostas urbanas.",
+  "goal": "Desenvolver um modelo preditivo para identificar áreas de risco.",
+  "justification": "O crescimento urbano em áreas inclinadas aumenta o risco de deslizamentos.",
+  "results": "Redução de riscos geotécnicos.",
+  "deadline": "2026-11-15 18:00",
+  "budget": 200000.00,
+  "researcher": 4,
+  "area": 10
+}
+```
+
+---
+
+### Research Area (Áreas de Pesquisa)
+
+Todos os endpoints requerem autenticação ✅
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/research/area/` | Listar todas as áreas de pesquisa |
+| `POST` | `/api/research/area/` | Criar área de pesquisa |
+| `GET` | `/api/research/area/{id}` | Buscar área por ID |
+| `PUT` | `/api/research/area/{id}` | Atualizar área de pesquisa |
+| `DELETE` | `/api/research/area/{id}` | Remover área de pesquisa |
+
+#### Exemplo de criação
+
+```json
+POST /api/research/area/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Exemplo Area de Pesquisa"
+}
+```
+
+---
+
 ### Universities (Universidades)
+
+Todos os endpoints requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -172,6 +313,7 @@ Content-Type: application/json
 
 ```json
 POST /api/universities/
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -182,6 +324,8 @@ Content-Type: application/json
 ---
 
 ### Experiences (Experiências)
+
+Todos os endpoints requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -196,6 +340,7 @@ Content-Type: application/json
 
 ```json
 POST /api/experiences/
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -210,6 +355,8 @@ Content-Type: application/json
 
 ### Educations (Formações)
 
+Todos os endpoints requerem autenticação ✅
+
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/api/educations/` | Listar todas as formações |
@@ -223,6 +370,7 @@ Content-Type: application/json
 
 ```json
 POST /api/educations/
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -238,6 +386,8 @@ Content-Type: application/json
 
 ### Skills (Habilidades)
 
+Todos os endpoints requerem autenticação ✅
+
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/api/skills/` | Listar todas as habilidades |
@@ -250,6 +400,7 @@ Content-Type: application/json
 
 ```json
 POST /api/skills/
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -260,6 +411,8 @@ Content-Type: application/json
 ---
 
 ### Resumes (Currículos)
+
+Todos os endpoints requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
