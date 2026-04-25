@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.skills',
     'apps.universities',
     'apps.research',
+    'apps.research_candidates',
     'apps.research_area',
     'apps.users',
 ]

@@ -14,7 +14,7 @@ class Research(models.Model):
     deadline = models.DateTimeField(db_column='prazo')
     budget = models.DecimalField(max_digits=10, decimal_places=2)
     company = models.ForeignKey(Company, on_delete=models.PROTECT, related_name='research', db_column='id_empresa')
-    researcher = models.ForeignKey(Researcher, on_delete=models.PROTECT, related_name='research', db_column='id_universidade')
+    researcher = models.ForeignKey(Researcher, on_delete=models.PROTECT, related_name='research', db_column='id_universidade', blank=True, null=True,)
     area = models.ForeignKey(ResearchArea, on_delete=models.PROTECT, related_name='research', db_column='id_area')
     registration_date = models.DateTimeField(auto_now_add=True, db_column='dt_cadastro')
     update_date = models.DateTimeField(auto_now=True, db_column='dt_atualizacao')
