@@ -129,7 +129,6 @@ Content-Type: application/json
   "id_tipo": "pesquisador",
   "name": "Pesquisador Exemplo",
   "university": 4,
-  "resume": 4,
   "availability": true,
   "area": [8, 9]
 }
@@ -145,10 +144,24 @@ Content-Type: application/json
   "email": "empresa@teste.com",
   "password": "minimo8caracteres",
   "id_tipo": "empresa",
-  "name": "Exemplo Ltda",
   "cnpj": "10.000.000/0001-00",
-  "registration_status": null
 }
+
+// exemplo de campos gerados após validação do cnpj
+
+// "empresa": {
+//     "razao_social": "GOOGLE BRASIL INTERNET LTDA.",
+//     "situacao_cadastral": "ATIVA",
+//     "municipio": "SAO PAULO",
+//     "uf": "SP",
+//     "endereco": {
+//         "logradouro": "BRIG FARIA LIMA",
+//         "numero": "3477",
+//         "complemento": "ANDAR 17A20 TSUL  2  17A20",
+//         "bairro": "ITAIM BIBI",
+//         "cep": "04538133"
+//     }
+// }
 ```
 
 #### Login
@@ -175,7 +188,7 @@ Content-Type: application/json
 
 ### Companies (Empresas)
 
-Todos os endpoints requerem autenticação ✅
+Todos os endpoints (exceto consulta de CNPJ) requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -185,6 +198,7 @@ Todos os endpoints requerem autenticação ✅
 | `PUT` | `/api/companies/{id}` | Atualizar empresa completa |
 | `PATCH` | `/api/companies/{id}` | Atualizar empresa parcialmente |
 | `DELETE` | `/api/companies/{id}` | Remover empresa |
+| `POST` | `/api/companies/cnpj-lookup/` | Consultar dados de CNPJ |
 
 #### Exemplo de criação
 
@@ -229,7 +243,6 @@ Content-Type: application/json
   "availability": true,
   "status": true,
   "university": 1,
-  "resume": 1
 }
 ```
 
@@ -257,14 +270,12 @@ Content-Type: application/json
 
 {
   "title": "Análise de Estabilidade de Taludes em Áreas Urbanas",
-  "status": "Pendente",
   "scope": "Estudo do comportamento de solos em encostas urbanas.",
   "goal": "Desenvolver um modelo preditivo para identificar áreas de risco.",
   "justification": "O crescimento urbano em áreas inclinadas aumenta o risco de deslizamentos.",
   "results": "Redução de riscos geotécnicos.",
   "deadline": "2026-11-15 18:00",
   "budget": 200000.00,
-  "researcher": 4,
   "area": 10
 }
 ```
@@ -295,6 +306,75 @@ Content-Type: application/json
 }
 ```
 
+---
+
+### Research Candidates (Candidatos de Pesquisa)
+
+Todos os endpoints requerem autenticação ✅
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/api/research/{id}/match/run/` | Executar algoritmo de matching para a pesquisa |
+| `GET` | `/api/research/{id}/candidates/` | Listar candidatos da pesquisa (empresa) |
+| `PATCH` | `/api/research/{id}/candidates/{candidate_id}/` | Alterar status de um candidato (empresa) |
+| `POST` | `/api/research/{id}/interest/` | Demonstrar interesse em uma pesquisa (pesquisador) |
+| `GET` | `/api/research/my-interests/` | Listar pesquisas de interesse do pesquisador autenticado |
+
+#### Parâmetros de query para listagem de candidatos
+
+| Parâmetro | Exemplo | Descrição |
+|-----------|---------|-----------|
+| `source` | `?source=ai` | Filtrar candidatos por origem (ex: `ai`) |
+| `status` | `?status=under_review` | Filtrar candidatos por status |
+| `ordering` | `?ordering=-score_match` | Ordenar por campo (prefixo `-` para decrescente) |
+
+#### Executar matching
+
+```json
+POST /api/research/{id}/match/run/
+Authorization: Bearer <token>
+```
+
+#### Listar candidatos com filtros
+
+```
+GET /api/research/{id}/candidates/
+GET /api/research/{id}/candidates/?source=ai
+GET /api/research/{id}/candidates/?status=under_review
+GET /api/research/{id}/candidates/?ordering=-score_match
+Authorization: Bearer <token>
+```
+
+#### Alterar status de candidato (empresa)
+
+```json
+PATCH /api/research/{id}/candidates/{candidate_id}/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "status": "under_review"
+}
+```
+
+#### Demonstrar interesse em pesquisa (pesquisador)
+
+```json
+POST /api/research/{id}/interest/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "interest_message": "Tenho experiência nesse tema."
+}
+```
+
+#### Listar interesses do pesquisador autenticado
+
+```
+GET /api/research/my-interests/
+Authorization: Bearer <token>
+```
 ---
 
 ### Universities (Universidades)
