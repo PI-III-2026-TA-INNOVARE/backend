@@ -18,7 +18,7 @@ class Researcher(models.Model):
     availability = models.BooleanField(blank=True, null=True, db_column='disponibilidade')
     status = models.BooleanField(default=True)
     university = models.ForeignKey(University, on_delete=models.PROTECT, related_name='researcher', db_column='id_universidade')
-    resume = models.OneToOneField(Resume, on_delete=models.PROTECT, related_name='researcher', db_column='id_curriculo')
+    resume = models.OneToOneField(Resume, on_delete=models.PROTECT, related_name='researcher', db_column='id_curriculo', blank=True, null=True)
     area = models.ManyToManyField(ResearchArea, related_name='researcher')
     
     def __str__(self):

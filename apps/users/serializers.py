@@ -13,7 +13,6 @@ from apps.users.services.institutional_domains import (
     is_institutional_email_domain,
 )
 
-
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8, style={'input_type': 'password'})
@@ -84,7 +83,7 @@ class RegisterSerializer(serializers.Serializer):
                 raise serializers.ValidationError({field: 'Este campo é obrigatório.' for field in missing})
 
         if id_tipo == User.UserType.PESQUISADOR:
-            required = ['university', 'resume']
+            required = ['university']
             missing = [field for field in required if not attrs.get(field)]
             if missing:
                 raise serializers.ValidationError({field: 'Este campo é obrigatório.' for field in missing})
@@ -143,7 +142,7 @@ class RegisterSerializer(serializers.Serializer):
             availability=validated_data.get('availability'),
             status=validated_data.get('status', True),
             university=validated_data['university'],
-            resume=validated_data['resume'],
+            resume=validated_data.get('resume'),
         )
         if area:
             researcher.area.set(area)
