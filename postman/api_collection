@@ -209,6 +209,38 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "look for cnpj",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"cnpj\": \"06.990.590/0001-23\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/companies/cnpj-lookup/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "companies",
+                "cnpj-lookup",
+                ""
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -328,7 +360,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"status\": \"0\"\r\n}",
+              "raw": "{\r\n  \"university\": 3\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -632,7 +664,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"title\": \"Análise de Estabilidade de Taludes em Áreas Urbanas\",\r\n    \"status\": \"Pendente\",\r\n    \"scope\": \"Estudo do comportamento de solos em encostas urbanas, com foco na prevenção de deslizamentos.\",\r\n    \"goal\": \"Desenvolver um modelo preditivo para identificar áreas de risco e propor soluções de contenção.\",\r\n    \"justification\": \"O crescimento urbano em áreas inclinadas aumenta o risco de deslizamentos, exigindo soluções técnicas mais eficazes.\",\r\n    \"results\": \"Redução de riscos geotécnicos e criação de diretrizes para obras de contenção mais seguras.\",\r\n    \"deadline\": \"2026-11-15 18:00\",\r\n    \"budget\": 200000.00,\r\n    \"researcher\": 4,\r\n    \"area\": 10\r\n}",
+              "raw": "{\r\n    \"title\": \"Sistema de Recomendação com Inteligência Artificial (IA)\",\r\n    \"scope\": \"Desenvolvimento de um modelo de IA para recomendação de produtos com base no comportamento do usuário.\",\r\n    \"goal\": \"Aumentar a taxa de conversão em plataformas digitais através de recomendações personalizadas.\",\r\n    \"justification\": \"Com o crescimento do e-commerce, é necessário melhorar a experiência do usuário para aumentar vendas e retenção.\",\r\n    \"results\": \"Espera-se um aumento de 20% na taxa de conversão e melhoria na satisfação dos usuários.\",\r\n    \"deadline\": \"2026-12-30 23:59\",\r\n    \"budget\": 150000.00,\r\n    \"area\": 6\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1754,7 +1786,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"empresateste@teste.com\",\r\n  \"password\": \"SenhaForte123!\"\r\n}",
+              "raw": "{\r\n  \"email\": \"teste@teste.com\",\r\n  \"password\": \"minimo8caracteres\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1783,7 +1815,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// exemplo criar usuario - pesquisador\r\n{\r\n  \"email\": \"pesquisador@gmail.com\",\r\n  \"password\": \"SenhaForte123!\",\r\n  \"id_tipo\": \"pesquisador\",\r\n  \"name\": \"Julia Santos\",\r\n  \"university\": 4,\r\n  \"resume\": 4,\r\n  \"availability\": true,\r\n  \"area\": [8, 9]\r\n}\r\n\r\n// exemplo criar usuario - empresa\r\n// {\r\n//   \"email\": \"empresateste@teste.com\",\r\n//   \"password\": \"SenhaForte123!\",\r\n//   \"id_tipo\": \"empresa\",\r\n//   \"name\": \"Teste Ltda\",\r\n//   \"cnpj\": \"10.000.000/0001-00\",\r\n//   \"registration_status\": null\r\n// }",
+              "raw": "// exemplo criar usuario - pesquisador\r\n// {\r\n//   \"email\": \"pesquisador@edu.br\",\r\n//   \"password\": \"minimo8caracteres\",\r\n//   \"id_tipo\": \"pesquisador\",\r\n//   \"name\": \"Pesquisador Teste\",\r\n//   \"university\": 4,\r\n//   \"availability\": true,\r\n//   \"area\": [8, 9]\r\n// }\r\n\r\n// exemplo criar usuario - empresa\r\n// {\r\n//   \"email\": \"teste@email.com\",\r\n//   \"password\": \"minimo8caracteres\",\r\n//   \"id_tipo\": \"empresa\",\r\n//   \"cnpj\": \"00.000.000/0000-00\"\r\n// }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1836,6 +1868,296 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "research candidates",
+      "item": [
+        {
+          "name": "run match",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/match/run/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "match",
+                "run",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list research candidates",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/candidates/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "candidates",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list research candidates source",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/candidates/?source=ai",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "candidates",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "source",
+                  "value": "ai"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list research candidates status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/candidates/?status=under_review",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "candidates",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "under_review"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list research candidates score match",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/candidates/?ordering=-score_match",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "candidates",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "ordering",
+                  "value": "-score_match"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "show interest (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \r\n    \"interest_message\": \"Tenho experiência nesse tema.\" \r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/interest/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "interest",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "change candidate status (company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \r\n    \"status\": \"under_review\" \r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/candidates/{{candidate_id}}/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "candidates",
+                "{{candidate_id}}",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "research interests (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/my-interests/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "my-interests",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
@@ -1873,6 +2195,10 @@
     },
     {
       "key": "token",
+      "value": ""
+    },
+    {
+      "key": "candidate_id",
       "value": ""
     }
   ]
