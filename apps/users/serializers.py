@@ -3,6 +3,14 @@ from django.db import transaction
 from rest_framework import serializers
 
 from apps.companies.models import Company
+from apps.companies.serializers import CompanyRegistrationSerializer
+from apps.companies.services.cnpj_lookup import (
+    CNPJNotFoundError,
+    CNPJProviderError,
+    InvalidCNPJError,
+    fetch_cnpj_data,
+    normalize_cnpj,
+)
 from apps.research_area.models import ResearchArea
 from apps.researchers.models import Researcher
 from apps.resumes.models import Resume
@@ -22,7 +30,6 @@ class RegisterSerializer(serializers.Serializer):
     status = serializers.BooleanField(required=False, default=True)
 
     cnpj = serializers.CharField(required=False, max_length=18)
-    registration_status = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=20)
 
     availability = serializers.BooleanField(required=False, allow_null=True)
     university = serializers.PrimaryKeyRelatedField(
@@ -69,20 +76,53 @@ class RegisterSerializer(serializers.Serializer):
         id_tipo = self._normalize_id_tipo(attrs.get('id_tipo'))
         attrs['id_tipo'] = id_tipo
 
-        common_required = ['name']
-        missing_common = [field for field in common_required if not attrs.get(field)]
-        if missing_common:
-            raise serializers.ValidationError(
-                {field: 'Este campo é obrigatório.' for field in missing_common}
-            )
-
         if id_tipo == User.UserType.EMPRESA:
             required = ['cnpj']
             missing = [field for field in required if not attrs.get(field)]
             if missing:
                 raise serializers.ValidationError({field: 'Este campo é obrigatório.' for field in missing})
 
+            try:
+                company_data = fetch_cnpj_data(attrs['cnpj'])
+            except InvalidCNPJError as exc:
+                raise serializers.ValidationError({'cnpj': str(exc)})
+            except CNPJNotFoundError as exc:
+                raise serializers.ValidationError({'cnpj': str(exc)})
+            except CNPJProviderError:
+                raise serializers.ValidationError(
+                    {
+                        'cnpj': (
+                            'Nao foi possivel validar o CNPJ no momento. '
+                            'Tente novamente mais tarde.'
+                        )
+                    }
+                )
+
+            if not company_data.get('pode_cadastrar'):
+                raise serializers.ValidationError(
+                    {
+                        'cnpj': (
+                            'Nao e possivel cadastrar empresa com situacao cadastral '
+                            'diferente de ATIVA.'
+                        )
+                    }
+                )
+
+            attrs['company_official_data'] = company_data
+            attrs['cnpj'] = company_data['cnpj']
+            cnpj_already_registered = any(
+                normalize_cnpj(existing) == company_data['cnpj']
+                for existing in Company.objects.values_list('cnpj', flat=True)
+            )
+            if cnpj_already_registered:
+                raise serializers.ValidationError({'cnpj': 'Este CNPJ ja esta cadastrado.'})
+
         if id_tipo == User.UserType.PESQUISADOR:
+            required = ['name']
+            missing = [field for field in required if not attrs.get(field)]
+            if missing:
+                raise serializers.ValidationError({field: 'Este campo é obrigatório.' for field in missing})
+
             required = ['university']
             missing = [field for field in required if not attrs.get(field)]
             if missing:
@@ -126,13 +166,24 @@ class RegisterSerializer(serializers.Serializer):
         )
 
         if id_tipo == User.UserType.EMPRESA:
-            Company.objects.create(
+            company_data = validated_data.pop('company_official_data')
+            address = company_data.get('endereco', {})
+            company = Company.objects.create(
                 user=user,
-                name=validated_data['name'],
-                cnpj=validated_data['cnpj'],
-                registration_status=validated_data.get('registration_status'),
+                name=company_data.get('razao_social'),
+                cnpj=company_data['cnpj'],
+                registration_status=company_data.get('situacao_cadastral'),
+                legal_name=company_data.get('razao_social'),
+                city=company_data.get('municipio'),
+                state=company_data.get('uf'),
+                street=address.get('logradouro'),
+                number=address.get('numero'),
+                complement=address.get('complemento'),
+                neighborhood=address.get('bairro'),
+                zip_code=address.get('cep'),
                 status=validated_data.get('status', True),
             )
+            user._registered_company = company
             return user
 
         area = validated_data.pop('area', [])
@@ -157,3 +208,18 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id_user', 'email', 'id_tipo', 'tipo', 'registration_date', 'update_date']
+
+
+class RegisterResponseSerializer(UserSerializer):
+    empresa = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ['empresa']
+
+    def get_empresa(self, obj):
+        company = getattr(obj, '_registered_company', None)
+        if company is None and hasattr(obj, 'company_profile'):
+            company = obj.company_profile
+        if not company:
+            return None
+        return CompanyRegistrationSerializer(company).data
