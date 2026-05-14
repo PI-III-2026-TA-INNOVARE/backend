@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
 
     'rest_framework',
     'corsheaders',
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
     'apps.universities',
     'apps.research',
     'apps.research_candidates',
+    'apps.search',
     'apps.research_area',
     'apps.users',
 ]
@@ -133,5 +135,17 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+SEARCH_EMBEDDING_DIMENSION = config('SEARCH_EMBEDDING_DIMENSION', default=384, cast=int)
+SEARCH_EMBEDDING_MODEL = config(
+    'SEARCH_EMBEDDING_MODEL',
+    default='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
+)
+SEARCH_EMBEDDING_ALLOW_HASH_FALLBACK = config(
+    'SEARCH_EMBEDDING_ALLOW_HASH_FALLBACK',
+    default=True,
+    cast=bool,
+)
+SEARCH_MIN_HYBRID_SCORE = config('SEARCH_MIN_HYBRID_SCORE', default=0.28, cast=float)
+SEARCH_RELATIVE_CUTOFF = config('SEARCH_RELATIVE_CUTOFF', default=0.65, cast=float)
 
 STATIC_URL = 'static/'

@@ -4,7 +4,8 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, response, status, views
 from rest_framework.exceptions import PermissionDenied
-from apps.research.models import Research, Researcher
+from apps.research.models import Research
+from apps.researchers.models import Researcher
 from .models import ResearchCandidate
 from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer
 from apps.users.models import User
