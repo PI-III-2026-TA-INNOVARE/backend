@@ -588,7 +588,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{company_access}}",
                   "type": "string"
                 }
               ]
@@ -992,14 +992,7 @@
           "name": "create university",
           "request": {
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             },
             "method": "POST",
             "header": [],
@@ -2158,6 +2151,91 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "semantic search",
+      "item": [
+        {
+          "name": "busca pesquisas (pesquisadores)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{researcher1_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/search/research/?q=projeto para reduzir falhas industriais usando analise de imagem&limit=5",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "search",
+                "research",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "projeto para reduzir falhas industriais usando analise de imagem"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "busca pesquisadores (empresa)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{company_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/search/researchers/?q=especialista em interpretar dados visuais para controle de qualidade fabril&limit=5",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "search",
+                "researchers",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "especialista em interpretar dados visuais para controle de qualidade fabril"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
@@ -2199,6 +2277,58 @@
     },
     {
       "key": "candidate_id",
+      "value": ""
+    },
+    {
+      "key": "company_access",
+      "value": ""
+    },
+    {
+      "key": "researcher1_access",
+      "value": ""
+    },
+    {
+      "key": "researcher2_access",
+      "value": ""
+    },
+    {
+      "key": "university_id",
+      "value": ""
+    },
+    {
+      "key": "area_ai_id",
+      "value": ""
+    },
+    {
+      "key": "area_bio_id",
+      "value": ""
+    },
+    {
+      "key": "skill_python_id",
+      "value": ""
+    },
+    {
+      "key": "skill_cv_id",
+      "value": ""
+    },
+    {
+      "key": "skill_nlp_id",
+      "value": ""
+    },
+    {
+      "key": "resume_r1_id",
+      "value": ""
+    },
+    {
+      "key": "resume_r2_id",
+      "value": ""
+    },
+    {
+      "key": "researcher1_id",
+      "value": ""
+    },
+    {
+      "key": "researcher2_id",
       "value": ""
     }
   ]

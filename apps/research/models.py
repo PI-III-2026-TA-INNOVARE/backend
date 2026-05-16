@@ -6,7 +6,7 @@ from apps.research_area.models import ResearchArea
 class Research(models.Model):
     id_research = models.AutoField(primary_key=True, db_column='id_pesquisa')
     title = models.CharField(max_length=200, db_column='titulo')
-    status = models.CharField(max_length=20, default='pendente')
+    status = models.CharField(max_length=20, default='aberta')
     scope = models.TextField(db_column='escopo')
     goal = models.TextField(db_column='objetivo')
     justification = models.TextField(db_column='justificativa')
