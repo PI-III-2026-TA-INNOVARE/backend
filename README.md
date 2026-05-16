@@ -130,7 +130,6 @@ Content-Type: application/json
   "name": "Pesquisador Exemplo",
   "university": 4,
   "availability": true,
-  "area": [8, 9]
 }
 ```
 
@@ -486,6 +485,37 @@ Content-Type: application/json
 {
   "description": "JavaScript"
 }
+```
+
+---
+
+### Semantic Search (Busca Semântica)
+
+Todos os endpoints requerem autenticação ✅
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/search/research/` | Buscar pesquisas por similaridade semântica (pesquisador) |
+| `GET` | `/api/search/researchers/` | Buscar pesquisadores por similaridade semântica (empresa) |
+
+#### Parâmetros de query
+
+| Parâmetro | Exemplo | Descrição |
+|--------|------|-----------|
+| `q` | `?q=projeto para reduzir falhas industriais` | Texto de busca semântica |
+| `limit` | `?limit=5` | Número máximo de resultados retornados |
+
+#### Buscar pesquisas (pesquisador)
+
+```json
+GET /api/search/research/?q=projeto para reduzir falhas industriais usando analise de imagem&limit=5
+Authorization: Bearer <token>
+```
+#### Buscar pesquisadores (empresa)
+
+```json
+GET /api/search/researchers/?q=especialista em interpretar dados visuais para controle de qualidade fabril&limit=5
+Authorization: Bearer <token>
 ```
 
 ---
