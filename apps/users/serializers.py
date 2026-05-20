@@ -223,3 +223,27 @@ class RegisterResponseSerializer(UserSerializer):
         if not company:
             return None
         return CompanyRegistrationSerializer(company).data
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('Este e-mail não está cadastrado.')
+        return value
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8, style={'input_type': 'password'})
+    confirm_password = serializers.CharField(write_only=True, min_length=8, style={'input_type': 'password'})
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'As senhas não coinciden.'})
+        return attrs
