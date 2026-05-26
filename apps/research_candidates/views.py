@@ -10,6 +10,7 @@ from apps.research.models import Research
 from .models import ResearchCandidate
 from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer, ResearcherRecommendationListSerializer
 from .services import run_match_for_research, run_match_for_researcher
+from .tasks import run_match_for_research_task
 from apps.users.models import User
 
 class _ResearchCompanyOwnerMixin:
@@ -153,6 +154,18 @@ class ResearchMatchRunView(_ResearchCompanyOwnerMixin, views.APIView):
 
     def post(self, request, pk):
         research = self.get_research()
+        if getattr(settings, 'AI_MATCH_ASYNC_ENABLED', False):
+            task = run_match_for_research_task.delay(research.id_research)
+            payload = {
+                'research_id': research.id_research,
+                'job_id': task.id,
+                'status': 'queued',
+                'updated': 0,
+                'removed': 0,
+            }
+            serializer = ResearchMatchRunResponseSerializer(payload)
+            return response.Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
         result = run_match_for_research(research.id_research)
         payload = {
             'research_id': research.id_research,

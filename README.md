@@ -86,6 +86,25 @@ python manage.py runserver
 
 A API estará disponível em: `http://127.0.0.1:8000`
 
+### Execução assíncrona de match (opcional)
+
+Para testar o match IA com fila assíncrona:
+
+1. Configure no `.env`:
+
+```env
+AI_MATCH_ASYNC_ENABLED=True
+REDIS_URL=redis://localhost:6379/0
+```
+
+2. Inicie o worker Celery em outro terminal:
+
+```bash
+celery -A config worker --pool=solo -l info
+```
+
+Com isso, os sinais de criação/edição enfileiram tarefas no Redis e o worker processa o match em background.
+
 ---
 
 ## Documentação interativa
