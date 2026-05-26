@@ -145,8 +145,15 @@ SEARCH_EMBEDDING_ALLOW_HASH_FALLBACK = config(
     default=True,
     cast=bool,
 )
-SEARCH_MIN_HYBRID_SCORE = config('SEARCH_MIN_HYBRID_SCORE', default=0.28, cast=float)
-SEARCH_RELATIVE_CUTOFF = config('SEARCH_RELATIVE_CUTOFF', default=0.65, cast=float)
+SEARCH_MIN_HYBRID_SCORE = config('SEARCH_MIN_HYBRID_SCORE', default=0.24, cast=float)
+SEARCH_RELATIVE_CUTOFF = config('SEARCH_RELATIVE_CUTOFF', default=0.55, cast=float)
+AI_MATCH_LIMIT_PER_RESEARCH = config('AI_MATCH_LIMIT_PER_RESEARCH', default=30, cast=int)
+AI_MATCH_LIMIT_PER_RESEARCHER = config('AI_MATCH_LIMIT_PER_RESEARCHER', default=30, cast=int)
+AI_MATCH_MIN_SCORE = config('AI_MATCH_MIN_SCORE', default=0.26, cast=float)
+AI_MATCH_WEIGHT_SEMANTIC = config('AI_MATCH_WEIGHT_SEMANTIC', default=0.45, cast=float)
+AI_MATCH_WEIGHT_LEXICAL = config('AI_MATCH_WEIGHT_LEXICAL', default=0.20, cast=float)
+AI_MATCH_WEIGHT_AREA = config('AI_MATCH_WEIGHT_AREA', default=0.25, cast=float)
+AI_MATCH_WEIGHT_AVAILABILITY = config('AI_MATCH_WEIGHT_AVAILABILITY', default=0.10, cast=float)
 
 STATIC_URL = 'static/'
 

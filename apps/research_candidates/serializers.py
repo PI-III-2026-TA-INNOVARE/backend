@@ -6,7 +6,21 @@ class ResearchCandidateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResearchCandidate
-        fields = ['id_candidate', 'research', 'researcher', 'researcher_name', 'source', 'score_match', 'status', 'interest_message', 'ai_run_id', 'created_at', 'updated_at',]
+        fields = [
+            'id_candidate',
+            'research',
+            'researcher',
+            'researcher_name',
+            'source',
+            'score_match',
+            'status',
+            'interest_message',
+            'match_reasons',
+            'score_features',
+            'ai_run_id',
+            'created_at',
+            'updated_at',
+        ]
         read_only_fields = ['created_at', 'updated_at', 'ai_run_id']
 
 class ResearchCandidateStatusUpdateSerializer(serializers.ModelSerializer):
@@ -25,8 +39,10 @@ class ResearchInterestSerializer(serializers.Serializer):
 
 class ResearchMatchRunResponseSerializer(serializers.Serializer):
     research_id = serializers.IntegerField()
-    job_id = serializers.UUIDField()
+    job_id = serializers.UUIDField(allow_null=True)
     status = serializers.CharField()
+    updated = serializers.IntegerField(required=False)
+    removed = serializers.IntegerField(required=False)
 
 class ResearcherInterestListSerializer(serializers.ModelSerializer):
     research_id = serializers.IntegerField(source='research.id_research', read_only=True)
@@ -34,4 +50,48 @@ class ResearcherInterestListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResearchCandidate
-        fields = ['id_candidate', 'research_id', 'research_title', 'source', 'score_match', 'status', 'interest_message', 'created_at', 'updated_at']
+        fields = [
+            'id_candidate',
+            'research_id',
+            'research_title',
+            'source',
+            'score_match',
+            'status',
+            'interest_message',
+            'match_reasons',
+            'score_features',
+            'created_at',
+            'updated_at',
+        ]
+
+
+class ResearcherRecommendationListSerializer(serializers.ModelSerializer):
+    research_id = serializers.IntegerField(source='research.id_research', read_only=True)
+    research_title = serializers.CharField(source='research.title', read_only=True)
+    research_status = serializers.CharField(source='research.status', read_only=True)
+    research_area = serializers.CharField(source='research.area.name', read_only=True)
+    company_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResearchCandidate
+        fields = [
+            'id_candidate',
+            'research_id',
+            'research_title',
+            'research_status',
+            'research_area',
+            'company_name',
+            'source',
+            'score_match',
+            'status',
+            'match_reasons',
+            'score_features',
+            'created_at',
+            'updated_at',
+        ]
+
+    def get_company_name(self, obj):
+        company = obj.research.company
+        if not company:
+            return None
+        return company.legal_name or company.name

@@ -1,13 +1,11 @@
-from decimal import Decimal
-from uuid import uuid4
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, response, status, views
 from rest_framework.exceptions import PermissionDenied
 from apps.research.models import Research
-from apps.researchers.models import Researcher
 from .models import ResearchCandidate
-from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer
+from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer, ResearcherRecommendationListSerializer
+from .services import run_match_for_research, run_match_for_researcher
 from apps.users.models import User
 
 class _ResearchCompanyOwnerMixin:
@@ -111,44 +109,38 @@ class ResearchMyInterestsView(generics.ListAPIView):
             .order_by('-updated_at')
         )
 
+
+class ResearcherRecommendationsView(generics.ListAPIView):
+    serializer_class = ResearcherRecommendationListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
+            raise PermissionDenied('Apenas usuarios pesquisador podem acessar recomendacoes.')
+
+        refresh = self.request.query_params.get('refresh')
+        if str(refresh).strip().lower() in {'1', 'true', 'sim', 'yes'}:
+            run_match_for_researcher(user.researcher_profile.id_researcher)
+
+        return (
+            ResearchCandidate.objects.select_related('research', 'research__area', 'research__company')
+            .filter(researcher=user.researcher_profile, source=ResearchCandidate.Source.AI)
+            .order_by('-score_match', '-updated_at')
+        )
+
 class ResearchMatchRunView(_ResearchCompanyOwnerMixin, views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         research = self.get_research()
-        job_id = uuid4()
-
-        # Placeholder de matching: candidatos ativos/disponiveis da mesma area da pesquisa.
-        potential_researchers = (
-            Researcher.objects.filter(status=True, availability=True, area=research.area)
-            .distinct()
-            .order_by('id_researcher')[:100]
-        )
-
-        for researcher in potential_researchers:
-            candidate, created = ResearchCandidate.objects.get_or_create(
-                research=research,
-                researcher=researcher,
-                defaults={
-                    'source': ResearchCandidate.Source.AI,
-                    'status': ResearchCandidate.CandidateStatus.SUGGESTED,
-                    'score_match': Decimal('1.0000'),
-                    'ai_run_id': job_id,
-                },
-            )
-            if created:
-                continue
-
-            # Nao sobrescreve fluxos manuais/interesse ja existentes.
-            if candidate.source in {ResearchCandidate.Source.INTEREST, ResearchCandidate.Source.MANUAL}:
-                continue
-
-            candidate.source = ResearchCandidate.Source.AI
-            if candidate.status == ResearchCandidate.CandidateStatus.SUGGESTED:
-                candidate.score_match = Decimal('1.0000')
-            candidate.ai_run_id = job_id
-            candidate.save(update_fields=['source', 'score_match', 'ai_run_id', 'updated_at'])
-
-        payload = {'research_id': research.id_research, 'job_id': job_id, 'status': 'queued'}
+        result = run_match_for_research(research.id_research)
+        payload = {
+            'research_id': research.id_research,
+            'job_id': result.get('run_id'),
+            'status': 'done' if result.get('ok') else 'error',
+            'updated': result.get('updated', 0),
+            'removed': result.get('removed', 0),
+        }
         serializer = ResearchMatchRunResponseSerializer(payload)
-        return response.Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return response.Response(serializer.data, status=status.HTTP_200_OK if result.get('ok') else status.HTTP_400_BAD_REQUEST)

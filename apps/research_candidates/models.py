@@ -22,6 +22,8 @@ class ResearchCandidate(models.Model):
     score_match = models.DecimalField(max_digits=6, decimal_places=4, blank=True, null=True)
     status = models.CharField(max_length=20, choices=CandidateStatus.choices, default=CandidateStatus.SUGGESTED)
     interest_message = models.TextField(blank=True, null=True)
+    match_reasons = models.JSONField(blank=True, null=True, db_column='motivos_match')
+    score_features = models.JSONField(blank=True, null=True, db_column='features_score')
     ai_run_id = models.UUIDField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_column='dt_cadastro')
     updated_at = models.DateTimeField(auto_now=True, db_column='dt_atualizacao')
