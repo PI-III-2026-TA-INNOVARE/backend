@@ -1,3 +1,7 @@
+from decimal import Decimal
+
+from django.conf import settings
+from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, response, status, views
@@ -123,9 +127,24 @@ class ResearcherRecommendationsView(generics.ListAPIView):
         if str(refresh).strip().lower() in {'1', 'true', 'sim', 'yes'}:
             run_match_for_researcher(user.researcher_profile.id_researcher)
 
+        min_score = Decimal(
+            str(getattr(settings, 'AI_MATCH_RECOMMENDATION_MIN_SCORE', getattr(settings, 'AI_MATCH_MIN_SCORE', 0.30)))
+        )
+        strong_reason_filter = (
+            Q(match_reasons__contains=['alta_similaridade_semantica'])
+            | Q(match_reasons__contains=['similaridade_semantica_moderada'])
+            | Q(match_reasons__contains=['boa_aderencia_textual'])
+            | Q(match_reasons__contains=['mesma_area_de_pesquisa'])
+        )
+
         return (
             ResearchCandidate.objects.select_related('research', 'research__area', 'research__company')
-            .filter(researcher=user.researcher_profile, source=ResearchCandidate.Source.AI)
+            .filter(
+                researcher=user.researcher_profile,
+                source=ResearchCandidate.Source.AI,
+                score_match__gte=min_score,
+            )
+            .filter(strong_reason_filter)
             .order_by('-score_match', '-updated_at')
         )
 

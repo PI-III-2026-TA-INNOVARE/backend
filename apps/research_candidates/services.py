@@ -24,6 +24,7 @@ WEIGHT_LEXICAL = float(getattr(settings, 'AI_MATCH_WEIGHT_LEXICAL', 0.25))
 WEIGHT_AREA = float(getattr(settings, 'AI_MATCH_WEIGHT_AREA', 0.15))
 WEIGHT_AVAILABILITY = float(getattr(settings, 'AI_MATCH_WEIGHT_AVAILABILITY', 0.10))
 OPEN_RESEARCH_STATUS = {'aberta', 'aberto', 'ativa', 'ativo', 'open'}
+REQUIRE_STRONG_REASON = bool(getattr(settings, 'AI_MATCH_REQUIRE_STRONG_REASON', True))
 
 
 def _normalize_score(value):
@@ -58,6 +59,10 @@ def _candidate_reasons(semantic, lexical, area_score, availability_score):
     if not reasons:
         reasons.append('compatibilidade_geral')
     return reasons
+
+
+def _has_strong_reason(semantic, lexical, area_score):
+    return bool(semantic >= 0.45 or lexical >= 0.20 or area_score >= 1.0)
 
 
 def _final_score(semantic, lexical, area_score, availability_score):
@@ -188,6 +193,8 @@ def run_match_for_research(research_id, limit=None):
         final_score = _final_score(semantic, lexical, area_score, availability_score)
         if final_score < MATCH_MIN_SCORE:
             continue
+        if REQUIRE_STRONG_REASON and not _has_strong_reason(semantic, lexical, area_score):
+            continue
 
         reasons = _candidate_reasons(semantic, lexical, area_score, availability_score)
         candidate, _, changed = _upsert_ai_candidate(
@@ -269,6 +276,8 @@ def run_match_for_researcher(researcher_id, limit=None):
 
         final_score = _final_score(semantic, lexical, area_score, availability_score)
         if final_score < MATCH_MIN_SCORE:
+            continue
+        if REQUIRE_STRONG_REASON and not _has_strong_reason(semantic, lexical, area_score):
             continue
 
         reasons = _candidate_reasons(semantic, lexical, area_score, availability_score)
