@@ -1,6 +1,7 @@
 from django.db import models
 from apps.research.models import Research
 from apps.researchers.models import Researcher
+from django.conf import settings
 
 class ResearchCandidate(models.Model):
     class Source(models.TextChoices):
@@ -35,3 +36,34 @@ class ResearchCandidate(models.Model):
         indexes = [models.Index(fields=['research', 'status'], name='idx_candidate_status'),
                    models.Index(fields=['research', 'source'], name='idx_candidate_source'),
                    models.Index(fields=['research', '-score_match'], name='idx_candidate_score')]
+
+
+class Notification(models.Model):
+    """
+    Armazena notificações do sistema para usuários.
+    Notificações sobre propostas, status changes, etc.
+    """
+    TYPE_CHOICES = [
+        ('proposta_recebida', 'Proposta Recebida'),
+        ('status_alterado', 'Status Alterado'),
+        ('match_automatico', 'Match Automático'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    tipo = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    titulo = models.CharField(max_length=200)
+    mensagem = models.TextField()
+    lido = models.BooleanField(default=False)
+    
+    # Dados relacionados
+    research_candidate = models.ForeignKey(ResearchCandidate, on_delete=models.CASCADE, null=True, blank=True)
+    
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_leitura = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'notificacao'
+        ordering = ['-data_criacao']
+
+    def __str__(self):
+        return f'{self.tipo}: {self.titulo}'
