@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from .models import ResearchCandidate
+from .models import ResearchCandidate, Notification
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer para notificações do usuário"""
+    research_title = serializers.CharField(source='research_candidate.research.title', read_only=True)
+    
+    class Meta:
+        model = Notification
+        fields = ['id', 'tipo', 'titulo', 'mensagem', 'lido', 'research_title', 'data_criacao', 'data_leitura']
+        read_only_fields = ['id', 'data_criacao', 'data_leitura']
 
 class ResearchCandidateSerializer(serializers.ModelSerializer):
     researcher_name = serializers.CharField(source='researcher.name', read_only=True)

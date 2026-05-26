@@ -2,12 +2,14 @@ from decimal import Decimal
 from uuid import uuid4
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, response, status, views
+from django.utils import timezone
+from rest_framework import generics, permissions, response, status, views, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from apps.research.models import Research
 from apps.researchers.models import Researcher
-from .models import ResearchCandidate
-from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer
+from .models import ResearchCandidate, Notification
+from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer, NotificationSerializer
 from apps.users.models import User
 
 class _ResearchCompanyOwnerMixin:
@@ -48,6 +50,39 @@ class ResearchCandidatesListView(_ResearchCompanyOwnerMixin, generics.ListAPIVie
 class ResearchCandidateStatusUpdateView(_ResearchCompanyOwnerMixin, generics.UpdateAPIView):
     serializer_class = ResearchCandidateStatusUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet para notificações do usuário autenticado"""
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Retorna apenas notificações do usuário autenticado"""
+        return Notification.objects.filter(user=self.request.user).order_by('-data_criacao')
+
+    @action(detail=True, methods=['post'])
+    def marcar_como_lido(self, request, pk=None):
+        """Marca uma notificação como lida"""
+        notificacao = self.get_object()
+        notificacao.lido = True
+        notificacao.data_leitura = timezone.now()
+        notificacao.save()
+        return response.Response(
+            {'status': 'Notificação marcada como lida'},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['post'])
+    def marcar_todas_como_lidas(self, request):
+        """Marca todas as notificações como lidas"""
+        notificacoes = self.get_queryset().filter(lido=False)
+        agora = timezone.now()
+        notificacoes.update(lido=True, data_leitura=agora)
+        return response.Response(
+            {'status': f'{notificacoes.count()} notificações marcadas como lidas'},
+            status=status.HTTP_200_OK
+        )
     http_method_names = ['patch']
 
     def get_object(self):
