@@ -1,0 +1,94 @@
+# P&D Connect — Backend stack
+#
+# Por padrão usa o banco definido no .env (DB_HOST, DB_PORT, etc.) — útil pra
+# apontar pro Postgres do Railway/Supabase/etc.
+#
+# Se quiser rodar um Postgres LOCAL em container, use o profile "local-db":
+#   docker compose --profile local-db up
+# Nesse caso, ajuste o .env pra DB_HOST=postgres e DB_PORT=5432.
+#
+# Uso normal (banco remoto):
+#   docker compose up
+#
+# Comandos úteis:
+#   docker compose exec api python manage.py migrate
+#   docker compose exec api python manage.py createsuperuser
+#   docker compose exec api python manage.py reindex_search
+#   docker compose logs -f worker
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: pdconnect-postgres
+    profiles: ["local-db"]   # só sobe com: docker compose --profile local-db up
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: pdconnect-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    image: renatopiresfilogenio/pdconnect-backend:latest
+    container_name: pdconnect-api
+    env_file: .env
+    # DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD vêm do .env (banco remoto/local).
+    # Só forçamos o REDIS_URL pra apontar pro container do Redis interno.
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - hf_cache:/root/.cache/huggingface
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    # extra_hosts permite que o container acesse "host.docker.internal" se você
+    # estiver rodando Postgres direto no host (sem container). No Linux, ative.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  worker:
+    image: renatopiresfilogenio/pdconnect-backend:latest
+    container_name: pdconnect-worker
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - .:/app
+      - hf_cache:/root/.cache/huggingface
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: celery -A config worker -l info
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  postgres_data:
+  hf_cache:
