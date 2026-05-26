@@ -157,6 +157,12 @@ AI_MATCH_WEIGHT_AVAILABILITY = config('AI_MATCH_WEIGHT_AVAILABILITY', default=0.
 AI_MATCH_RECOMMENDATION_MIN_SCORE = config('AI_MATCH_RECOMMENDATION_MIN_SCORE', default=0.30, cast=float)
 AI_MATCH_REQUIRE_STRONG_REASON = config('AI_MATCH_REQUIRE_STRONG_REASON', default=True, cast=bool)
 AI_MATCH_ASYNC_ENABLED = config('AI_MATCH_ASYNC_ENABLED', default=False, cast=bool)
+AI_MATCH_RERANK_ENABLED = config('AI_MATCH_RERANK_ENABLED', default=False, cast=bool)
+AI_MATCH_RERANK_TOP_N = config('AI_MATCH_RERANK_TOP_N', default=12, cast=int)
+AI_MATCH_RERANK_WEIGHT = config('AI_MATCH_RERANK_WEIGHT', default=0.35, cast=float)
+AI_MATCH_GEMINI_MODEL = config('AI_MATCH_GEMINI_MODEL', default='gemini-2.5-flash')
+AI_MATCH_GEMINI_TIMEOUT_SECONDS = config('AI_MATCH_GEMINI_TIMEOUT_SECONDS', default=25, cast=int)
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')

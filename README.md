@@ -105,6 +105,21 @@ celery -A config worker --pool=solo -l info
 
 Com isso, os sinais de criação/edição enfileiram tarefas no Redis e o worker processa o match em background.
 
+### Rerank com Gemini
+
+Opcionalmente, você pode habilitar o reranking dos melhores candidatos gerados por pgvector + MiniLM (base semântica) com Gemini:
+
+```env
+GEMINI_API_KEY=<sua_chave>
+AI_MATCH_RERANK_ENABLED=True
+AI_MATCH_RERANK_TOP_N=12
+AI_MATCH_RERANK_WEIGHT=0.35
+AI_MATCH_GEMINI_MODEL=gemini-2.5-flash
+```
+
+Quando habilitado, o sistema combina o score da base com o score do Gemini apenas no Top-N.
+Se a API do Gemini falhar, o sistema mantém automaticamente o score da base (fallback seguro).
+
 ---
 
 ## Documentação interativa
