@@ -2192,6 +2192,46 @@
           "response": []
         },
         {
+          "name": "send suggestion (company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{company_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \r\n    \"researcher\": 24\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/candidates/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "candidates",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "change candidate status (company)",
           "request": {
             "auth": {
@@ -2256,6 +2296,36 @@
                 "api",
                 "research",
                 "my-interests",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "research suggestions (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/my-suggestions/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "my-suggestions",
                 ""
               ]
             }
