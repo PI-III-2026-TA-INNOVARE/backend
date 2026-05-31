@@ -449,8 +449,8 @@ Todos os endpoints requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/api/research/dashboard/researcher/` | Painel com KPIs do pesquisador |
-| `GET` | `/api/research/dashboard/company/` | Painel com KPIs da empresa |
+| `GET` | `/api/dashboard/researcher/` | Painel com KPIs do pesquisador |
+| `GET` | `/api/dashboard/company/` | Painel com KPIs da empresa |
 
 #### Painel do pesquisador
 
