@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import ResearchCandidatesListView, ResearchCandidateStatusUpdateView, ResearchInterestCreateView, ResearchMatchRunView, ResearchMyInterestsView, ResearcherRecommendationsView
+from .views import ResearchCandidatesListView, ResearchCandidateStatusUpdateView, ResearchInterestCreateView, ResearchMatchRunView, ResearchMyInterestsView, ResearchMySuggestionsView, ResearcherRecommendationsView
 
 urlpatterns = [
     path('research/my-interests/', ResearchMyInterestsView.as_view(), name='research-my-interests'),
+    path('research/my-suggestions/', ResearchMySuggestionsView.as_view(), name='research-my-suggestions'),
     path('research/my-recommendations/', ResearcherRecommendationsView.as_view(), name='research-my-recommendations'),
     path('research/<int:pk>/candidates/', ResearchCandidatesListView.as_view(), name='research-candidates-list'),
     path('research/<int:pk>/candidates/<int:candidate_id>/', ResearchCandidateStatusUpdateView.as_view(), name='research-candidate-status-update'),

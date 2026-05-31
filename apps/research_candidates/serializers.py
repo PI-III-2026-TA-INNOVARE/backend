@@ -1,4 +1,7 @@
 from rest_framework import serializers
+
+from apps.researchers.models import Researcher
+
 from .models import ResearchCandidate
 
 class ResearchCandidateSerializer(serializers.ModelSerializer):
@@ -22,6 +25,10 @@ class ResearchCandidateSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['created_at', 'updated_at', 'ai_run_id']
+
+
+class ResearchCandidateCreateSerializer(serializers.Serializer):
+    researcher = serializers.PrimaryKeyRelatedField(queryset=Researcher.objects.select_related('university').all())
 
 class ResearchCandidateStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:

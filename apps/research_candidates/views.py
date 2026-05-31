@@ -8,7 +8,15 @@ from rest_framework import generics, permissions, response, status, views
 from rest_framework.exceptions import PermissionDenied
 from apps.research.models import Research
 from .models import ResearchCandidate
-from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer, ResearcherRecommendationListSerializer
+from .serializers import (
+    ResearchCandidateCreateSerializer,
+    ResearchCandidateSerializer,
+    ResearchCandidateStatusUpdateSerializer,
+    ResearchInterestSerializer,
+    ResearchMatchRunResponseSerializer,
+    ResearcherInterestListSerializer,
+    ResearcherRecommendationListSerializer,
+)
 from .services import run_match_for_research, run_match_for_researcher
 from .tasks import run_match_for_research_task
 from apps.users.models import User
@@ -26,7 +34,7 @@ class _ResearchCompanyOwnerMixin:
             raise PermissionDenied('Somente a empresa dona da pesquisa pode acessar candidatos.')
         return research
 
-class ResearchCandidatesListView(_ResearchCompanyOwnerMixin, generics.ListAPIView):
+class ResearchCandidatesListView(_ResearchCompanyOwnerMixin, generics.ListCreateAPIView):
     serializer_class = ResearchCandidateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -47,6 +55,48 @@ class ResearchCandidatesListView(_ResearchCompanyOwnerMixin, generics.ListAPIVie
         if ordering not in allowed_ordering:
             ordering = '-score_match'
         return queryset.order_by(ordering, '-id_candidate')
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ResearchCandidateCreateSerializer
+        return ResearchCandidateSerializer
+
+    def create(self, request, *args, **kwargs):
+        research = self.get_research()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            candidate, created = ResearchCandidate.objects.get_or_create(
+                research=research,
+                researcher=serializer.validated_data['researcher'],
+                defaults={
+                    'source': ResearchCandidate.Source.MANUAL,
+                    'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW,
+                },
+            )
+
+            updated_fields = []
+            if candidate.source != ResearchCandidate.Source.MANUAL:
+                candidate.source = ResearchCandidate.Source.MANUAL
+                updated_fields.append('source')
+
+            if candidate.status in {
+                ResearchCandidate.CandidateStatus.SUGGESTED,
+                ResearchCandidate.CandidateStatus.INTERESTED,
+            }:
+                candidate.status = ResearchCandidate.CandidateStatus.UNDER_REVIEW
+                updated_fields.append('status')
+
+            if updated_fields and not created:
+                updated_fields.append('updated_at')
+                candidate.save(update_fields=updated_fields)
+
+        output = ResearchCandidateSerializer(candidate)
+        return response.Response(
+            output.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
 class ResearchCandidateStatusUpdateView(_ResearchCompanyOwnerMixin, generics.UpdateAPIView):
     serializer_class = ResearchCandidateStatusUpdateSerializer
@@ -110,7 +160,29 @@ class ResearchMyInterestsView(generics.ListAPIView):
 
         return (
             ResearchCandidate.objects.select_related('research')
-            .filter(researcher=user.researcher_profile)
+            .filter(
+                researcher=user.researcher_profile,
+                source=ResearchCandidate.Source.INTEREST,
+            )
+            .order_by('-updated_at')
+        )
+
+
+class ResearchMySuggestionsView(generics.ListAPIView):
+    serializer_class = ResearcherInterestListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
+            raise PermissionDenied('Apenas usuário pesquisador pode acessar suas sugestões.')
+
+        return (
+            ResearchCandidate.objects.select_related('research')
+            .filter(
+                researcher=user.researcher_profile,
+                source=ResearchCandidate.Source.MANUAL,
+            )
             .order_by('-updated_at')
         )
 
@@ -122,7 +194,7 @@ class ResearcherRecommendationsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
-            raise PermissionDenied('Apenas usuarios pesquisador podem acessar recomendacoes.')
+            raise PermissionDenied('Apenas usuário pesquisador pode acessar recomendações.')
 
         refresh = self.request.query_params.get('refresh')
         if str(refresh).strip().lower() in {'1', 'true', 'sim', 'yes'}:
