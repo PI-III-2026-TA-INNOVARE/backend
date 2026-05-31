@@ -443,6 +443,38 @@ Authorization: Bearer <token>
 
 ---
 
+### Dashboard (Painel de Indicadores)
+
+Todos os endpoints requerem autenticação ✅
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/research/dashboard/researcher/` | Painel com KPIs do pesquisador |
+| `GET` | `/api/research/dashboard/company/` | Painel com KPIs da empresa |
+
+#### Painel do pesquisador
+
+```
+GET /api/dashboard/researcher/
+Authorization: Bearer <token>
+```
+
+#### Painel da empresa
+
+```
+GET /api/dashboard/company/
+Authorization: Bearer <token>
+```
+
+Opcionalmente, a empresa pode filtrar um painel por pesquisa específica:
+
+```
+GET /api/dashboard/company/?research_id=123
+Authorization: Bearer <token>
+```
+
+---
+
 ### Universities (Universidades)
 
 Todos os endpoints requerem autenticação ✅
