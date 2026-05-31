@@ -349,9 +349,11 @@ Todos os endpoints requerem autenticação ✅
 |--------|------|-----------|
 | `POST` | `/api/research/{id}/match/run/` | Executar algoritmo de matching para a pesquisa manualmente (empresa)|
 | `GET` | `/api/research/{id}/candidates/` | Listar candidatos da pesquisa (empresa) |
+| `POST` | `/api/research/{id}/candidates/` | Indicar manualmente um pesquisador para a pesquisa (empresa) |
 | `PATCH` | `/api/research/{id}/candidates/{candidate_id}/` | Alterar status de um candidato (empresa) |
 | `POST` | `/api/research/{id}/interest/` | Demonstrar interesse em uma pesquisa (pesquisador) |
 | `GET` | `/api/research/my-interests/` | Listar pesquisas de interesse do pesquisador autenticado |
+| `GET` | `/api/research/my-suggestions/` | Listar sugestões manuais recebidas de empresas para o pesquisador autenticado |
 | `GET` | `/api/research/my-recommendations/` | Listar pesquisas recomendadas por IA para o pesquisador autenticado |
 
 #### Parâmetros de query para listagem de candidatos
@@ -378,6 +380,21 @@ GET /api/research/{id}/candidates/?status=under_review
 GET /api/research/{id}/candidates/?ordering=-score_match
 Authorization: Bearer <token>
 ```
+
+#### Indicar manualmente um pesquisador na pesquisa
+
+```
+POST /api/research/{id}/candidates/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "researcher": 123
+}
+```
+
+Esse fluxo permite que a empresa encontre um pesquisador em `/api/search/researchers/` e,
+depois de escolher uma das suas pesquisas publicadas, o adicione como candidato manualmente.
 
 #### Alterar status de candidato (empresa)
 
@@ -407,6 +424,13 @@ Content-Type: application/json
 
 ```
 GET /api/research/my-interests/
+Authorization: Bearer <token>
+```
+
+#### Listar sugestões manuais recebidas de empresas
+
+```
+GET /api/research/my-suggestions/
 Authorization: Bearer <token>
 ```
 
@@ -588,39 +612,3 @@ Content-Type: application/json
 ```
 
 ---
-
-## Rotas adicionais (atualizado)
-
-As rotas abaixo tambem estao ativas no projeto e complementam as tabelas acima:
-
-### Auth
-
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `POST` | `/api/auth/token/refresh/` | ❌ | Gerar novo access token com refresh token |
-| `POST` | `/api/auth/forgot-password/` | ❌ | Solicitar redefinicao de senha por e-mail |
-| `POST` | `/api/auth/reset-password/` | ❌ | Redefinir senha com token |
-
-Exemplo de refresh:
-
-```json
-POST /api/auth/token/refresh/
-Content-Type: application/json
-
-{
-  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
-}
-```
-
-### Research Candidates
-
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `GET` | `/api/research/my-recommendations/` | ✅ | Lista recomendações de pesquisas por IA para o pesquisador |
-
-Exemplo com recálculo imediato:
-
-```
-GET /api/research/my-recommendations/?refresh=true
-Authorization: Bearer <token>
-```
