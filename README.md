@@ -520,6 +520,25 @@ Authorization: Bearer <token>
 
 ---
 
+### Notifications (Notificações)
+
+Todos os endpoints requerem autenticação ✅
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/notificacoes/` | Listar notificações do usuário |
+| `POST` | `/api/notificacoes/{id}/marcar_como_lido/` | Marcar uma notificação como lida |
+| `POST` | `/api/notificacoes/marcar_todas_como_lidas/` | Marcar todas como lidas |
+
+#### Marcar como lida
+
+```json
+POST /api/notificacoes/{id}/marcar_como_lido/
+Authorization: Bearer <token>
+```
+
+---
+
 ### Resumes (Currículos)
 
 Todos os endpoints requerem autenticação ✅

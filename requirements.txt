@@ -57,3 +57,5 @@ typer==0.25.1
 typing_extensions==4.15.0
 tzdata==2026.1
 uritemplate==4.2.0
+celery
+redis

@@ -9,7 +9,14 @@ from rest_framework.exceptions import PermissionDenied
 from apps.research.models import Research
 from apps.researchers.models import Researcher
 from .models import ResearchCandidate, Notification
-from .serializers import ResearchCandidateSerializer, ResearchCandidateStatusUpdateSerializer, ResearchInterestSerializer, ResearchMatchRunResponseSerializer, ResearcherInterestListSerializer, NotificationSerializer
+from .serializers import (
+    ResearchCandidateSerializer, 
+    ResearchCandidateStatusUpdateSerializer, 
+    ResearchInterestSerializer, 
+    ResearchMatchRunResponseSerializer, 
+    ResearcherInterestListSerializer, 
+    NotificationSerializer
+)
 from apps.users.models import User
 
 class _ResearchCompanyOwnerMixin:
@@ -51,6 +58,13 @@ class ResearchCandidateStatusUpdateView(_ResearchCompanyOwnerMixin, generics.Upd
     serializer_class = ResearchCandidateStatusUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_object(self):
+        research = self.get_research()
+        return get_object_or_404(
+            ResearchCandidate.objects.filter(research=research),
+            pk=self.kwargs['candidate_id'],
+        )
+
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet para notificações do usuário autenticado"""
@@ -82,14 +96,6 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         return response.Response(
             {'status': f'{notificacoes.count()} notificações marcadas como lidas'},
             status=status.HTTP_200_OK
-        )
-    http_method_names = ['patch']
-
-    def get_object(self):
-        research = self.get_research()
-        return get_object_or_404(
-            ResearchCandidate.objects.filter(research=research),
-            pk=self.kwargs['candidate_id'],
         )
 
 class ResearchInterestCreateView(views.APIView):
@@ -151,39 +157,11 @@ class ResearchMatchRunView(_ResearchCompanyOwnerMixin, views.APIView):
 
     def post(self, request, pk):
         research = self.get_research()
-        job_id = uuid4()
-
-        # Placeholder de matching: candidatos ativos/disponiveis da mesma area da pesquisa.
-        potential_researchers = (
-            Researcher.objects.filter(status=True, availability=True, area=research.area)
-            .distinct()
-            .order_by('id_researcher')[:100]
+        # In actual implementation this should trigger the celery task
+        from .tasks import run_match_for_research_task
+        run_match_for_research_task.delay(research.id_research)
+        
+        return response.Response(
+            {'status': 'Matching process started in background'},
+            status=status.HTTP_202_ACCEPTED
         )
-
-        for researcher in potential_researchers:
-            candidate, created = ResearchCandidate.objects.get_or_create(
-                research=research,
-                researcher=researcher,
-                defaults={
-                    'source': ResearchCandidate.Source.AI,
-                    'status': ResearchCandidate.CandidateStatus.SUGGESTED,
-                    'score_match': Decimal('1.0000'),
-                    'ai_run_id': job_id,
-                },
-            )
-            if created:
-                continue
-
-            # Nao sobrescreve fluxos manuais/interesse ja existentes.
-            if candidate.source in {ResearchCandidate.Source.INTEREST, ResearchCandidate.Source.MANUAL}:
-                continue
-
-            candidate.source = ResearchCandidate.Source.AI
-            if candidate.status == ResearchCandidate.CandidateStatus.SUGGESTED:
-                candidate.score_match = Decimal('1.0000')
-            candidate.ai_run_id = job_id
-            candidate.save(update_fields=['source', 'score_match', 'ai_run_id', 'updated_at'])
-
-        payload = {'research_id': research.id_research, 'job_id': job_id, 'status': 'queued'}
-        serializer = ResearchMatchRunResponseSerializer(payload)
-        return response.Response(serializer.data, status=status.HTTP_202_ACCEPTED)
