@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/', include('apps.research_candidates.urls')),
     path('api/', include('apps.search.urls')),
     path('api/', include('apps.research_area.urls')),
+    path('api/', include('apps.dashboard.urls')),
 
     path('api/', include('apps.proposals.urls')),
 

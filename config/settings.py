@@ -146,8 +146,34 @@ SEARCH_EMBEDDING_ALLOW_HASH_FALLBACK = config(
     default=True,
     cast=bool,
 )
-SEARCH_MIN_HYBRID_SCORE = config('SEARCH_MIN_HYBRID_SCORE', default=0.28, cast=float)
-SEARCH_RELATIVE_CUTOFF = config('SEARCH_RELATIVE_CUTOFF', default=0.65, cast=float)
+SEARCH_MIN_HYBRID_SCORE = config('SEARCH_MIN_HYBRID_SCORE', default=0.24, cast=float)
+SEARCH_RELATIVE_CUTOFF = config('SEARCH_RELATIVE_CUTOFF', default=0.55, cast=float)
+AI_MATCH_LIMIT_PER_RESEARCH = config('AI_MATCH_LIMIT_PER_RESEARCH', default=30, cast=int)
+AI_MATCH_LIMIT_PER_RESEARCHER = config('AI_MATCH_LIMIT_PER_RESEARCHER', default=30, cast=int)
+AI_MATCH_MIN_SCORE = config('AI_MATCH_MIN_SCORE', default=0.26, cast=float)
+AI_MATCH_WEIGHT_SEMANTIC = config('AI_MATCH_WEIGHT_SEMANTIC', default=0.45, cast=float)
+AI_MATCH_WEIGHT_LEXICAL = config('AI_MATCH_WEIGHT_LEXICAL', default=0.20, cast=float)
+AI_MATCH_WEIGHT_AREA = config('AI_MATCH_WEIGHT_AREA', default=0.25, cast=float)
+AI_MATCH_WEIGHT_AVAILABILITY = config('AI_MATCH_WEIGHT_AVAILABILITY', default=0.10, cast=float)
+AI_MATCH_RECOMMENDATION_MIN_SCORE = config('AI_MATCH_RECOMMENDATION_MIN_SCORE', default=0.30, cast=float)
+AI_MATCH_REQUIRE_STRONG_REASON = config('AI_MATCH_REQUIRE_STRONG_REASON', default=True, cast=bool)
+AI_MATCH_ASYNC_ENABLED = config('AI_MATCH_ASYNC_ENABLED', default=False, cast=bool)
+AI_MATCH_RERANK_ENABLED = config('AI_MATCH_RERANK_ENABLED', default=False, cast=bool)
+AI_MATCH_RERANK_TOP_N = config('AI_MATCH_RERANK_TOP_N', default=12, cast=int)
+AI_MATCH_RERANK_WEIGHT = config('AI_MATCH_RERANK_WEIGHT', default=0.35, cast=float)
+AI_MATCH_GEMINI_MODEL = config('AI_MATCH_GEMINI_MODEL', default='gemini-2.5-flash')
+AI_MATCH_GEMINI_TIMEOUT_SECONDS = config('AI_MATCH_GEMINI_TIMEOUT_SECONDS', default=25, cast=int)
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = config('CELERY_TASK_TIME_LIMIT', default=900, cast=int)
+CELERY_TASK_SOFT_TIME_LIMIT = config('CELERY_TASK_SOFT_TIME_LIMIT', default=840, cast=int)
 
 STATIC_URL = 'static/'
 

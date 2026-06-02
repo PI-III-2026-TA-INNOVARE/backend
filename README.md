@@ -86,6 +86,40 @@ python manage.py runserver
 
 A API estará disponível em: `http://127.0.0.1:8000`
 
+### Execução assíncrona de match (opcional)
+
+Para testar o match IA com fila assíncrona:
+
+1. Configure no `.env`:
+
+```env
+AI_MATCH_ASYNC_ENABLED=True
+REDIS_URL=redis://localhost:6379/0
+```
+
+2. Inicie o worker Celery em outro terminal:
+
+```bash
+celery -A config worker --pool=solo -l info
+```
+
+Com isso, os sinais de criação/edição enfileiram tarefas no Redis e o worker processa o match em background.
+
+### Rerank com Gemini
+
+Opcionalmente, você pode habilitar o reranking dos melhores candidatos gerados por pgvector + MiniLM (base semântica) com Gemini:
+
+```env
+GEMINI_API_KEY=<sua_chave>
+AI_MATCH_RERANK_ENABLED=True
+AI_MATCH_RERANK_TOP_N=12
+AI_MATCH_RERANK_WEIGHT=0.35
+AI_MATCH_GEMINI_MODEL=gemini-2.5-flash
+```
+
+Quando habilitado, o sistema combina o score da base com o score do Gemini apenas no Top-N.
+Se a API do Gemini falhar, o sistema mantém automaticamente o score da base (fallback seguro).
+
 ---
 
 ## Documentação interativa
@@ -313,11 +347,14 @@ Todos os endpoints requerem autenticação ✅
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/research/{id}/match/run/` | Executar algoritmo de matching para a pesquisa |
+| `POST` | `/api/research/{id}/match/run/` | Executar algoritmo de matching para a pesquisa manualmente (empresa)|
 | `GET` | `/api/research/{id}/candidates/` | Listar candidatos da pesquisa (empresa) |
+| `POST` | `/api/research/{id}/candidates/` | Indicar manualmente um pesquisador para a pesquisa (empresa) |
 | `PATCH` | `/api/research/{id}/candidates/{candidate_id}/` | Alterar status de um candidato (empresa) |
 | `POST` | `/api/research/{id}/interest/` | Demonstrar interesse em uma pesquisa (pesquisador) |
 | `GET` | `/api/research/my-interests/` | Listar pesquisas de interesse do pesquisador autenticado |
+| `GET` | `/api/research/my-suggestions/` | Listar sugestões manuais recebidas de empresas para o pesquisador autenticado |
+| `GET` | `/api/research/my-recommendations/` | Listar pesquisas recomendadas por IA para o pesquisador autenticado |
 
 #### Parâmetros de query para listagem de candidatos
 
@@ -343,6 +380,21 @@ GET /api/research/{id}/candidates/?status=under_review
 GET /api/research/{id}/candidates/?ordering=-score_match
 Authorization: Bearer <token>
 ```
+
+#### Indicar manualmente um pesquisador na pesquisa
+
+```
+POST /api/research/{id}/candidates/
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "researcher": 123
+}
+```
+
+Esse fluxo permite que a empresa encontre um pesquisador em `/api/search/researchers/` e,
+depois de escolher uma das suas pesquisas publicadas, o adicione como candidato manualmente.
 
 #### Alterar status de candidato (empresa)
 
@@ -374,6 +426,53 @@ Content-Type: application/json
 GET /api/research/my-interests/
 Authorization: Bearer <token>
 ```
+
+#### Listar sugestões manuais recebidas de empresas
+
+```
+GET /api/research/my-suggestions/
+Authorization: Bearer <token>
+```
+
+#### Atualização manual das recomendações do pesquisador autenticado
+
+```
+GET /api/research/my-recommendations/?refresh=true
+Authorization: Bearer <token>
+```
+
+---
+
+### Dashboard (Painel de Indicadores)
+
+Todos os endpoints requerem autenticação ✅
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/dashboard/researcher/` | Painel com KPIs do pesquisador |
+| `GET` | `/api/dashboard/company/` | Painel com KPIs da empresa |
+
+#### Painel do pesquisador
+
+```
+GET /api/dashboard/researcher/
+Authorization: Bearer <token>
+```
+
+#### Painel da empresa
+
+```
+GET /api/dashboard/company/
+Authorization: Bearer <token>
+```
+
+Opcionalmente, a empresa pode filtrar um painel por pesquisa específica:
+
+```
+GET /api/dashboard/company/?research_id=123
+Authorization: Bearer <token>
+```
+
 ---
 
 ### Universities (Universidades)
@@ -562,3 +661,5 @@ Content-Type: application/json
   "skills": [6, 7]
 }
 ```
+
+---

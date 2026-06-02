@@ -521,7 +521,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{company_access}}",
                   "type": "string"
                 }
               ]
@@ -588,7 +588,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{company_access}}",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -597,7 +597,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"title\": \"Sistema de Recomendação com Inteligência Artificial (IA)\"\r\n}",
+              "raw": "{\r\n  \"area\": 25\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -605,14 +605,14 @@
               }
             },
             "url": {
-              "raw": "{{baseURL}}/api/research/{{id}}",
+              "raw": "{{baseURL}}/api/research/265",
               "host": [
                 "{{baseURL}}"
               ],
               "path": [
                 "api",
                 "research",
-                "{{id}}"
+                "265"
               ]
             }
           },
@@ -900,7 +900,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{company_access}}",
                   "type": "string"
                 }
               ]
@@ -998,7 +998,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"name\": \"Sample University\"\r\n}",
+              "raw": "{\r\n  \"name\": \"Fundação Hermínio Ometto\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1773,7 +1773,7 @@
       "name": "users",
       "item": [
         {
-          "name": "login - acess token",
+          "name": "login - access token",
           "request": {
             "method": "POST",
             "header": [],
@@ -1808,7 +1808,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// exemplo criar usuario - pesquisador\r\n// {\r\n//   \"email\": \"pesquisador@edu.br\",\r\n//   \"password\": \"minimo8caracteres\",\r\n//   \"id_tipo\": \"pesquisador\",\r\n//   \"name\": \"Pesquisador Teste\",\r\n//   \"university\": 4,\r\n//   \"availability\": true,\r\n//   \"area\": [8, 9]\r\n// }\r\n\r\n// exemplo criar usuario - empresa\r\n// {\r\n//   \"email\": \"teste@email.com\",\r\n//   \"password\": \"minimo8caracteres\",\r\n//   \"id_tipo\": \"empresa\",\r\n//   \"cnpj\": \"00.000.000/0000-00\"\r\n// }",
+              "raw": "// exemplo criar usuario - pesquisador\r\n// {\r\n//   \"email\": \"zuleica.bio@ufmg.br\",\r\n//   \"password\": \"minimo8caracteres\",\r\n//   \"id_tipo\": \"pesquisador\",\r\n//   \"name\": \"Zuleica Mendes\",\r\n//   \"university\": 16,\r\n//   \"availability\": true,\r\n// }\r\n\r\n// exemplo criar usuario - empresa\r\n{\r\n  \"email\": \"innovare@gmail.com\",\r\n  \"password\": \"minimo8caracteres\",\r\n  \"id_tipo\": \"empresa\",\r\n  \"cnpj\": \"06.990.590/0001-23\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1866,36 +1866,148 @@
       "name": "research candidates",
       "item": [
         {
-          "name": "run match",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
+          "name": "match",
+          "item": [
+            {
+              "name": "research recommendations (researcher)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{researcher1_access}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/research/my-recommendations/",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "research",
+                    "my-recommendations",
+                    ""
+                  ]
                 }
-              ]
+              },
+              "response": []
             },
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseURL}}/api/research/{{id}}/match/run/",
-              "host": [
-                "{{baseURL}}"
-              ],
-              "path": [
-                "api",
-                "research",
-                "{{id}}",
-                "match",
-                "run",
-                ""
-              ]
+            {
+              "name": "candidates match (company)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/research/274/candidates/?source=ai&ordering=-score_match",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "research",
+                    "274",
+                    "candidates",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "source",
+                      "value": "ai"
+                    },
+                    {
+                      "key": "ordering",
+                      "value": "-score_match"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "manual - run match (company)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/research/{{id}}/match/run/",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "research",
+                    "{{id}}",
+                    "match",
+                    "run",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "manual - run match recommendations (researcher)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/research/my-recommendations/?refresh=true",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "research",
+                    "my-recommendations",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "refresh",
+                      "value": "true"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
-          },
-          "response": []
+          ]
         },
         {
           "name": "list research candidates",
@@ -2080,6 +2192,46 @@
           "response": []
         },
         {
+          "name": "send suggestion (company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{company_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \r\n    \"researcher\": 24\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/research/{{id}}/candidates/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "{{id}}",
+                "candidates",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "change candidate status (company)",
           "request": {
             "auth": {
@@ -2149,6 +2301,36 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "research suggestions (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/research/my-suggestions/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "research",
+                "my-suggestions",
+                ""
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -2171,7 +2353,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseURL}}/api/search/research/?q=projeto para reduzir falhas industriais usando analise de imagem&limit=5",
+              "raw": "{{baseURL}}/api/search/research/?q=pesquisa laboratorial focada em biomarcadores para diagnostico antecipado&limit=5",
               "host": [
                 "{{baseURL}}"
               ],
@@ -2184,7 +2366,7 @@
               "query": [
                 {
                   "key": "q",
-                  "value": "projeto para reduzir falhas industriais usando analise de imagem"
+                  "value": "pesquisa laboratorial focada em biomarcadores para diagnostico antecipado"
                 },
                 {
                   "key": "limit",
@@ -2211,7 +2393,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseURL}}/api/search/researchers/?q=especialista em interpretar dados visuais para controle de qualidade fabril&limit=5",
+              "raw": "{{baseURL}}/api/search/researchers/?q=criar fluxo reprodutivel para analise computacional de dados biologicos&limit=5",
               "host": [
                 "{{baseURL}}"
               ],
@@ -2224,11 +2406,112 @@
               "query": [
                 {
                   "key": "q",
-                  "value": "especialista em interpretar dados visuais para controle de qualidade fabril"
+                  "value": "criar fluxo reprodutivel para analise computacional de dados biologicos"
                 },
                 {
                   "key": "limit",
                   "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "dashboard indicators",
+      "item": [
+        {
+          "name": "researcher indicators",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{researcher1_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/dashboard/researcher/",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "researcher",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "company indicators",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{company_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}} /api/dashboard/company/",
+              "host": [
+                "{{baseURL}} "
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "company",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "specific research indicators (company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{company_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}} /api/dashboard/company/?research_id={{id}}",
+              "host": [
+                "{{baseURL}} "
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "company",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "research_id",
+                  "value": "{{id}}"
                 }
               ]
             }
