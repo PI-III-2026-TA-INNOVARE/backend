@@ -1,23 +1,23 @@
 from decimal import Decimal
-
 from django.conf import settings
-from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, response, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from apps.research.models import Research
 from apps.researchers.models import Researcher
-from .models import ResearchCandidate, Notification
+from .models import ResearchCandidate
 from .serializers import (
     ResearchCandidateSerializer, 
+    ResearchCandidateCreateSerializer,
     ResearchCandidateStatusUpdateSerializer, 
     ResearchInterestSerializer, 
     ResearchMatchRunResponseSerializer, 
-    ResearcherInterestListSerializer, 
-    NotificationSerializer
+    ResearcherInterestListSerializer,
+    PropostaSerializer
 )
 from apps.users.models import User
 
@@ -110,38 +110,6 @@ class ResearchCandidateStatusUpdateView(_ResearchCompanyOwnerMixin, generics.Upd
         )
 
 
-class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet para notificações do usuário autenticado"""
-    serializer_class = NotificationSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        """Retorna apenas notificações do usuário autenticado"""
-        return Notification.objects.filter(user=self.request.user).order_by('-data_criacao')
-
-    @action(detail=True, methods=['post'])
-    def marcar_como_lido(self, request, pk=None):
-        """Marca uma notificação como lida"""
-        notificacao = self.get_object()
-        notificacao.lido = True
-        notificacao.data_leitura = timezone.now()
-        notificacao.save()
-        return response.Response(
-            {'status': 'Notificação marcada como lida'},
-            status=status.HTTP_200_OK
-        )
-
-    @action(detail=False, methods=['post'])
-    def marcar_todas_como_lidas(self, request):
-        """Marca todas as notificações como lidas"""
-        notificacoes = self.get_queryset().filter(lido=False)
-        agora = timezone.now()
-        notificacoes.update(lido=True, data_leitura=agora)
-        return response.Response(
-            {'status': f'{notificacoes.count()} notificações marcadas como lidas'},
-            status=status.HTTP_200_OK
-        )
-
 class ResearchInterestCreateView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -200,8 +168,7 @@ class ResearchMyInterestsView(generics.ListAPIView):
         )
 
 
-class ResearchMySuggestionsView(generics.ListAPIView):
-    serializer_class = ResearcherInterestListSerializer
+class ResearchMatchRunView(_ResearchCompanyOwnerMixin, views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
@@ -214,3 +181,31 @@ class ResearchMySuggestionsView(generics.ListAPIView):
             {'status': 'Matching process started in background'},
             status=status.HTTP_202_ACCEPTED
         )
+
+class PropostaViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gerenciar propostas (ResearchCandidate com source='manual').
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PropostaSerializer
+
+    def get_queryset(self):
+        # Retorna apenas propostas (source='manual')
+        return ResearchCandidate.objects.filter(source='manual')
+
+    def create(self, request, *args, **kwargs):
+        """Criar uma nova proposta setando source='manual'"""
+        data = request.data.copy()
+        data['source'] = 'manual'
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=False, methods=['get'])
+    def minhas_propostas(self, request):
+        """Retorna propostas do pesquisador autenticado"""
+        propostas = self.get_queryset().filter(researcher__user=request.user)
+        serializer = self.get_serializer(propostas, many=True)
+        return Response(serializer.data)

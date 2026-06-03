@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     'apps.search',
     'apps.research_area',
     'apps.users',
-    'apps.proposals',
+    'apps.dashboard',
 ]
 
 MIDDLEWARE = [

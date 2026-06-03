@@ -1,14 +1,7 @@
 from rest_framework import serializers
-from .models import ResearchCandidate, Notification
-
-class NotificationSerializer(serializers.ModelSerializer):
-    """Serializer para notificações do usuário"""
-    research_title = serializers.CharField(source='research_candidate.research.title', read_only=True)
-
-    class Meta:
-        model = Notification
-        fields = ['id', 'tipo', 'titulo', 'mensagem', 'lido', 'research_title', 'data_criacao', 'data_leitura']
-        read_only_fields = ['id', 'data_criacao', 'data_leitura']
+from .models import ResearchCandidate
+from apps.researchers.models import Researcher
+from apps.research.models import Research
 
 class ResearchCandidateSerializer(serializers.ModelSerializer):
     researcher_name = serializers.CharField(source='researcher.name', read_only=True)
@@ -64,3 +57,28 @@ class ResearcherInterestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResearchCandidate
         fields = ['id_candidate', 'research_id', 'research_title', 'source', 'score_match', 'status', 'interest_message', 'created_at', 'updated_at']
+
+class PropostaSerializer(serializers.ModelSerializer):
+    """
+    Serializer para propostas (usando tabela pesquisa_candidato).
+    Uma proposta é um ResearchCandidate com source='manual'.
+    """
+    research = serializers.PrimaryKeyRelatedField(queryset=Research.objects.all())
+    researcher = serializers.PrimaryKeyRelatedField(queryset=Researcher.objects.all())
+    empresa_id = serializers.IntegerField(source='research.company.id_company', read_only=True)
+    mensagem = serializers.CharField(source='interest_message', required=False, allow_blank=True)
+    
+    class Meta:
+        model = ResearchCandidate
+        fields = [
+            'id_candidate',
+            'research',
+            'researcher',
+            'empresa_id',
+            'mensagem',
+            'status',
+            'source',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id_candidate', 'created_at', 'updated_at']

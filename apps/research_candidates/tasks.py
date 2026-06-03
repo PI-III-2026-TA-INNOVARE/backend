@@ -4,7 +4,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from apps.research_candidates.services import run_match_for_research, run_match_for_researcher
-from apps.research_candidates.models import Notification
+from apps.users.models import User
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 3})
 def run_match_for_research_task(self, research_id):
@@ -15,17 +15,15 @@ def run_match_for_researcher_task(self, researcher_id):
     return run_match_for_researcher(researcher_id)
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 2})
-def send_notification_email_task(self, notification_id):
+def send_notification_email_task(self, user_id, tipo, titulo, mensagem, candidate_id=None):
     """
     Envia email de notificação para o usuário.
-    Disparada automaticamente quando uma notificação é criada.
+    Recebe os dados diretamente sem depender da tabela Notification.
     """
     try:
-        notification = Notification.objects.get(id=notification_id)
-    except Notification.DoesNotExist:
-        return {'status': 'error', 'message': 'Notificação não encontrada'}
-
-    user = notification.user
+        user = User.objects.get(id_user=user_id)
+    except User.DoesNotExist:
+        return {'status': 'error', 'message': 'Usuário não encontrado'}
 
     # Templates por tipo de notificação
     templates = {
@@ -39,14 +37,14 @@ def send_notification_email_task(self, notification_id):
         'pesquisa_encerrada': 'emails/notification_research_closed.html',
     }
 
-    template_name = templates.get(notification.tipo, 'emails/notification_default.html')
+    template_name = templates.get(tipo, 'emails/notification_default.html')
 
     try:
         context = {
-            'notification': notification,
             'user': user,
-            'title': notification.titulo,
-            'message': notification.mensagem,
+            'title': titulo,
+            'message': mensagem,
+            'candidate_id': candidate_id,
             'frontend_url': getattr(settings, 'FRONTEND_URL', 'http://localhost:5173'),
         }
 
@@ -54,7 +52,7 @@ def send_notification_email_task(self, notification_id):
         plain_message = strip_tags(html_message)
 
         send_mail(
-            subject=notification.titulo,
+            subject=titulo,
             message=plain_message,
             from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@pdconnect.com'),
             recipient_list=[user.email],
