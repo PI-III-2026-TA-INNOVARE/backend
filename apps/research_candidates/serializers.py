@@ -1,8 +1,7 @@
 from rest_framework import serializers
-
-from apps.researchers.models import Researcher
-
 from .models import ResearchCandidate
+from apps.researchers.models import Researcher
+from apps.research.models import Research
 
 class ResearchCandidateSerializer(serializers.ModelSerializer):
     researcher_name = serializers.CharField(source='researcher.name', read_only=True)
@@ -57,48 +56,29 @@ class ResearcherInterestListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResearchCandidate
-        fields = [
-            'id_candidate',
-            'research_id',
-            'research_title',
-            'source',
-            'score_match',
-            'status',
-            'interest_message',
-            'match_reasons',
-            'score_features',
-            'created_at',
-            'updated_at',
-        ]
+        fields = ['id_candidate', 'research_id', 'research_title', 'source', 'score_match', 'status', 'interest_message', 'created_at', 'updated_at']
 
-
-class ResearcherRecommendationListSerializer(serializers.ModelSerializer):
-    research_id = serializers.IntegerField(source='research.id_research', read_only=True)
-    research_title = serializers.CharField(source='research.title', read_only=True)
-    research_status = serializers.CharField(source='research.status', read_only=True)
-    research_area = serializers.CharField(source='research.area.name', read_only=True)
-    company_name = serializers.SerializerMethodField()
-
+class PropostaSerializer(serializers.ModelSerializer):
+    """
+    Serializer para propostas (usando tabela pesquisa_candidato).
+    Uma proposta é um ResearchCandidate com source='manual'.
+    """
+    research = serializers.PrimaryKeyRelatedField(queryset=Research.objects.all())
+    researcher = serializers.PrimaryKeyRelatedField(queryset=Researcher.objects.all())
+    empresa_id = serializers.IntegerField(source='research.company.id_company', read_only=True)
+    mensagem = serializers.CharField(source='interest_message', required=False, allow_blank=True)
+    
     class Meta:
         model = ResearchCandidate
         fields = [
             'id_candidate',
-            'research_id',
-            'research_title',
-            'research_status',
-            'research_area',
-            'company_name',
-            'source',
-            'score_match',
+            'research',
+            'researcher',
+            'empresa_id',
+            'mensagem',
             'status',
-            'match_reasons',
-            'score_features',
+            'source',
             'created_at',
             'updated_at',
         ]
-
-    def get_company_name(self, obj):
-        company = obj.research.company
-        if not company:
-            return None
-        return company.legal_name or company.name
+        read_only_fields = ['id_candidate', 'created_at', 'updated_at']

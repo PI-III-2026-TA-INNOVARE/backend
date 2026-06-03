@@ -1,11 +1,12 @@
 from django.db import models
-from apps.research.models import Research
+from apps.research.models import Research     
 from apps.researchers.models import Researcher
+from django.conf import settings
 
-class ResearchCandidate(models.Model):
+class ResearchCandidate(models.Model):        
     class Source(models.TextChoices):
         AI = 'ai', 'ai'
-        INTEREST = 'interest', 'interest'
+        INTEREST = 'interest', 'interest'     
         MANUAL = 'manual', 'manual'
 
     class CandidateStatus(models.TextChoices):
