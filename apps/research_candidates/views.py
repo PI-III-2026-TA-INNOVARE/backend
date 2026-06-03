@@ -163,6 +163,7 @@ class ResearchMyInterestsView(generics.ListAPIView):
             .filter(
                 researcher=user.researcher_profile,
                 source=ResearchCandidate.Source.INTEREST,
+                status=ResearchCandidate.CandidateStatus.INTERESTED,
             )
             .order_by('-updated_at')
         )
@@ -182,9 +183,68 @@ class ResearchMySuggestionsView(generics.ListAPIView):
             .filter(
                 researcher=user.researcher_profile,
                 source=ResearchCandidate.Source.MANUAL,
+                status__in=[
+                    ResearchCandidate.CandidateStatus.SUGGESTED,
+                    ResearchCandidate.CandidateStatus.UNDER_REVIEW,
+                ],
             )
             .order_by('-updated_at')
         )
+
+
+class _ResearcherCandidateActionMixin(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    allowed_sources = ()
+
+    def get_candidate(self):
+        user = self.request.user
+        if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
+            raise PermissionDenied('Apenas usuario pesquisador pode responder a esta solicitacao.')
+
+        candidate = get_object_or_404(
+            ResearchCandidate.objects.select_related('research', 'research__area', 'research__company'),
+            pk=self.kwargs['candidate_id'],
+            researcher=user.researcher_profile,
+            source__in=self.allowed_sources,
+        )
+        return candidate
+
+    def _apply_decision(self, candidate, status_value):
+        candidate.status = status_value
+        candidate.save(update_fields=['status', 'updated_at'])
+        return response.Response(ResearchCandidateSerializer(candidate).data, status=status.HTTP_200_OK)
+
+
+class ResearchMyRecommendationAcceptView(_ResearcherCandidateActionMixin):
+    allowed_sources = (ResearchCandidate.Source.AI,)
+
+    def post(self, request, candidate_id):
+        candidate = self.get_candidate()
+        return self._apply_decision(candidate, ResearchCandidate.CandidateStatus.INTERESTED)
+
+
+class ResearchMyRecommendationRejectView(_ResearcherCandidateActionMixin):
+    allowed_sources = (ResearchCandidate.Source.AI,)
+
+    def post(self, request, candidate_id):
+        candidate = self.get_candidate()
+        return self._apply_decision(candidate, ResearchCandidate.CandidateStatus.REJECTED)
+
+
+class ResearchMySuggestionAcceptView(_ResearcherCandidateActionMixin):
+    allowed_sources = (ResearchCandidate.Source.MANUAL,)
+
+    def post(self, request, candidate_id):
+        candidate = self.get_candidate()
+        return self._apply_decision(candidate, ResearchCandidate.CandidateStatus.INTERESTED)
+
+
+class ResearchMySuggestionRejectView(_ResearcherCandidateActionMixin):
+    allowed_sources = (ResearchCandidate.Source.MANUAL,)
+
+    def post(self, request, candidate_id):
+        candidate = self.get_candidate()
+        return self._apply_decision(candidate, ResearchCandidate.CandidateStatus.REJECTED)
 
 
 class ResearcherRecommendationsView(generics.ListAPIView):
@@ -215,6 +275,7 @@ class ResearcherRecommendationsView(generics.ListAPIView):
             .filter(
                 researcher=user.researcher_profile,
                 source=ResearchCandidate.Source.AI,
+                status=ResearchCandidate.CandidateStatus.SUGGESTED,
                 score_match__gte=min_score,
             )
             .filter(strong_reason_filter)

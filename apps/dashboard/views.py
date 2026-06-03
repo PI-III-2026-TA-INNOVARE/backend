@@ -20,6 +20,153 @@ def _float_or_none(value):
     return None if value is None else float(value)
 
 
+def _candidate_breakdown_summary(queryset):
+    return queryset.aggregate(
+        total_candidates=Count('id_candidate'),
+        average_score=Avg('score_match'),
+        ai_suggested_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.AI, status=ResearchCandidate.CandidateStatus.SUGGESTED),
+        ),
+        ai_interested_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.AI, status=ResearchCandidate.CandidateStatus.INTERESTED),
+        ),
+        ai_under_review_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.AI, status=ResearchCandidate.CandidateStatus.UNDER_REVIEW),
+        ),
+        ai_approved_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.AI, status=ResearchCandidate.CandidateStatus.APPROVED),
+        ),
+        ai_rejected_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.AI, status=ResearchCandidate.CandidateStatus.REJECTED),
+        ),
+        manual_suggested_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.MANUAL, status=ResearchCandidate.CandidateStatus.SUGGESTED),
+        ),
+        manual_interested_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.MANUAL, status=ResearchCandidate.CandidateStatus.INTERESTED),
+        ),
+        manual_under_review_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.MANUAL, status=ResearchCandidate.CandidateStatus.UNDER_REVIEW),
+        ),
+        manual_approved_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.MANUAL, status=ResearchCandidate.CandidateStatus.APPROVED),
+        ),
+        manual_rejected_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.MANUAL, status=ResearchCandidate.CandidateStatus.REJECTED),
+        ),
+        interest_suggested_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.INTEREST, status=ResearchCandidate.CandidateStatus.SUGGESTED),
+        ),
+        interest_interested_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.INTEREST, status=ResearchCandidate.CandidateStatus.INTERESTED),
+        ),
+        interest_under_review_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.INTEREST, status=ResearchCandidate.CandidateStatus.UNDER_REVIEW),
+        ),
+        interest_approved_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.INTEREST, status=ResearchCandidate.CandidateStatus.APPROVED),
+        ),
+        interest_rejected_candidates=Count(
+            'id_candidate',
+            filter=Q(source=ResearchCandidate.Source.INTEREST, status=ResearchCandidate.CandidateStatus.REJECTED),
+        ),
+    )
+
+
+def _candidate_source_status_rows(summary):
+    return [
+        {
+            'source': ResearchCandidate.Source.AI,
+            'status': ResearchCandidate.CandidateStatus.SUGGESTED,
+            'count': summary['ai_suggested_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.AI,
+            'status': ResearchCandidate.CandidateStatus.INTERESTED,
+            'count': summary['ai_interested_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.AI,
+            'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW,
+            'count': summary['ai_under_review_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.AI,
+            'status': ResearchCandidate.CandidateStatus.APPROVED,
+            'count': summary['ai_approved_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.AI,
+            'status': ResearchCandidate.CandidateStatus.REJECTED,
+            'count': summary['ai_rejected_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.MANUAL,
+            'status': ResearchCandidate.CandidateStatus.SUGGESTED,
+            'count': summary['manual_suggested_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.MANUAL,
+            'status': ResearchCandidate.CandidateStatus.INTERESTED,
+            'count': summary['manual_interested_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.MANUAL,
+            'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW,
+            'count': summary['manual_under_review_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.MANUAL,
+            'status': ResearchCandidate.CandidateStatus.APPROVED,
+            'count': summary['manual_approved_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.MANUAL,
+            'status': ResearchCandidate.CandidateStatus.REJECTED,
+            'count': summary['manual_rejected_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.INTEREST,
+            'status': ResearchCandidate.CandidateStatus.SUGGESTED,
+            'count': summary['interest_suggested_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.INTEREST,
+            'status': ResearchCandidate.CandidateStatus.INTERESTED,
+            'count': summary['interest_interested_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.INTEREST,
+            'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW,
+            'count': summary['interest_under_review_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.INTEREST,
+            'status': ResearchCandidate.CandidateStatus.APPROVED,
+            'count': summary['interest_approved_candidates'] or 0,
+        },
+        {
+            'source': ResearchCandidate.Source.INTEREST,
+            'status': ResearchCandidate.CandidateStatus.REJECTED,
+            'count': summary['interest_rejected_candidates'] or 0,
+        },
+    ]
+
+
 class ResearcherDashboardView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -32,18 +179,7 @@ class ResearcherDashboardView(views.APIView):
             researcher=user.researcher_profile
         )
 
-        summary = queryset.aggregate(
-            total_candidates=Count('id_candidate'),
-            average_score=Avg('score_match'),
-            manual_candidates=Count('id_candidate', filter=Q(source=ResearchCandidate.Source.MANUAL)),
-            ai_candidates=Count('id_candidate', filter=Q(source=ResearchCandidate.Source.AI)),
-            interest_candidates=Count('id_candidate', filter=Q(source=ResearchCandidate.Source.INTEREST)),
-            suggested_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.SUGGESTED)),
-            interested_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.INTERESTED)),
-            under_review_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.UNDER_REVIEW)),
-            approved_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.APPROVED)),
-            rejected_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.REJECTED)),
-        )
+        summary = _candidate_breakdown_summary(queryset)
 
         top_companies_rows = (
             queryset.values('research__company_id', 'research__company__legal_name', 'research__company__name')
@@ -60,27 +196,35 @@ class ResearcherDashboardView(views.APIView):
             'summary': {
                 'total_candidates': summary['total_candidates'] or 0,
                 'average_score': _float_or_none(summary['average_score']),
-                'manual_candidates': summary['manual_candidates'] or 0,
-                'ai_candidates': summary['ai_candidates'] or 0,
-                'interest_candidates': summary['interest_candidates'] or 0,
-                'suggested_candidates': summary['suggested_candidates'] or 0,
-                'interested_candidates': summary['interested_candidates'] or 0,
-                'under_review_candidates': summary['under_review_candidates'] or 0,
-                'approved_candidates': summary['approved_candidates'] or 0,
-                'rejected_candidates': summary['rejected_candidates'] or 0,
+                'ai_suggested_candidates': summary['ai_suggested_candidates'] or 0,
+                'ai_interested_candidates': summary['ai_interested_candidates'] or 0,
+                'ai_under_review_candidates': summary['ai_under_review_candidates'] or 0,
+                'ai_approved_candidates': summary['ai_approved_candidates'] or 0,
+                'ai_rejected_candidates': summary['ai_rejected_candidates'] or 0,
+                'manual_suggested_candidates': summary['manual_suggested_candidates'] or 0,
+                'manual_interested_candidates': summary['manual_interested_candidates'] or 0,
+                'manual_under_review_candidates': summary['manual_under_review_candidates'] or 0,
+                'manual_approved_candidates': summary['manual_approved_candidates'] or 0,
+                'manual_rejected_candidates': summary['manual_rejected_candidates'] or 0,
+                'interest_suggested_candidates': summary['interest_suggested_candidates'] or 0,
+                'interest_interested_candidates': summary['interest_interested_candidates'] or 0,
+                'interest_under_review_candidates': summary['interest_under_review_candidates'] or 0,
+                'interest_approved_candidates': summary['interest_approved_candidates'] or 0,
+                'interest_rejected_candidates': summary['interest_rejected_candidates'] or 0,
             },
             'by_source': [
-                {'source': ResearchCandidate.Source.MANUAL, 'count': summary['manual_candidates'] or 0},
-                {'source': ResearchCandidate.Source.AI, 'count': summary['ai_candidates'] or 0},
-                {'source': ResearchCandidate.Source.INTEREST, 'count': summary['interest_candidates'] or 0},
+                {'source': ResearchCandidate.Source.MANUAL, 'count': (summary['manual_suggested_candidates'] or 0) + (summary['manual_interested_candidates'] or 0) + (summary['manual_under_review_candidates'] or 0) + (summary['manual_approved_candidates'] or 0) + (summary['manual_rejected_candidates'] or 0)},
+                {'source': ResearchCandidate.Source.AI, 'count': (summary['ai_suggested_candidates'] or 0) + (summary['ai_interested_candidates'] or 0) + (summary['ai_under_review_candidates'] or 0) + (summary['ai_approved_candidates'] or 0) + (summary['ai_rejected_candidates'] or 0)},
+                {'source': ResearchCandidate.Source.INTEREST, 'count': (summary['interest_suggested_candidates'] or 0) + (summary['interest_interested_candidates'] or 0) + (summary['interest_under_review_candidates'] or 0) + (summary['interest_approved_candidates'] or 0) + (summary['interest_rejected_candidates'] or 0)},
             ],
             'by_status': [
-                {'status': ResearchCandidate.CandidateStatus.SUGGESTED, 'count': summary['suggested_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.INTERESTED, 'count': summary['interested_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW, 'count': summary['under_review_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.APPROVED, 'count': summary['approved_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.REJECTED, 'count': summary['rejected_candidates'] or 0},
+                {'status': ResearchCandidate.CandidateStatus.SUGGESTED, 'count': (summary['ai_suggested_candidates'] or 0) + (summary['manual_suggested_candidates'] or 0) + (summary['interest_suggested_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.INTERESTED, 'count': (summary['ai_interested_candidates'] or 0) + (summary['manual_interested_candidates'] or 0) + (summary['interest_interested_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW, 'count': (summary['ai_under_review_candidates'] or 0) + (summary['manual_under_review_candidates'] or 0) + (summary['interest_under_review_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.APPROVED, 'count': (summary['ai_approved_candidates'] or 0) + (summary['manual_approved_candidates'] or 0) + (summary['interest_approved_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.REJECTED, 'count': (summary['ai_rejected_candidates'] or 0) + (summary['manual_rejected_candidates'] or 0) + (summary['interest_rejected_candidates'] or 0)},
             ],
+            'by_source_status': _candidate_source_status_rows(summary),
             'top_companies': [
                 {
                     'company_id': row['research__company_id'],
@@ -124,18 +268,7 @@ class CompanyDashboardView(views.APIView):
             candidate_qs = candidate_qs.filter(research_id=research_id)
             research_qs = research_qs.filter(pk=research_id)
 
-        summary = candidate_qs.aggregate(
-            total_candidates=Count('id_candidate'),
-            average_score=Avg('score_match'),
-            manual_candidates=Count('id_candidate', filter=Q(source=ResearchCandidate.Source.MANUAL)),
-            ai_candidates=Count('id_candidate', filter=Q(source=ResearchCandidate.Source.AI)),
-            interest_candidates=Count('id_candidate', filter=Q(source=ResearchCandidate.Source.INTEREST)),
-            suggested_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.SUGGESTED)),
-            interested_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.INTERESTED)),
-            under_review_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.UNDER_REVIEW)),
-            approved_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.APPROVED)),
-            rejected_candidates=Count('id_candidate', filter=Q(status=ResearchCandidate.CandidateStatus.REJECTED)),
-        )
+        summary = _candidate_breakdown_summary(candidate_qs)
 
         research_rows = research_qs.annotate(
             total_candidates=Count('candidates', filter=Q(candidates__isnull=False)),
@@ -155,27 +288,35 @@ class CompanyDashboardView(views.APIView):
                 'total_researches': research_qs.count(),
                 'total_candidates': summary['total_candidates'] or 0,
                 'average_score': _float_or_none(summary['average_score']),
-                'manual_candidates': summary['manual_candidates'] or 0,
-                'ai_candidates': summary['ai_candidates'] or 0,
-                'interest_candidates': summary['interest_candidates'] or 0,
-                'suggested_candidates': summary['suggested_candidates'] or 0,
-                'interested_candidates': summary['interested_candidates'] or 0,
-                'under_review_candidates': summary['under_review_candidates'] or 0,
-                'approved_candidates': summary['approved_candidates'] or 0,
-                'rejected_candidates': summary['rejected_candidates'] or 0,
+                'ai_suggested_candidates': summary['ai_suggested_candidates'] or 0,
+                'ai_interested_candidates': summary['ai_interested_candidates'] or 0,
+                'ai_under_review_candidates': summary['ai_under_review_candidates'] or 0,
+                'ai_approved_candidates': summary['ai_approved_candidates'] or 0,
+                'ai_rejected_candidates': summary['ai_rejected_candidates'] or 0,
+                'manual_suggested_candidates': summary['manual_suggested_candidates'] or 0,
+                'manual_interested_candidates': summary['manual_interested_candidates'] or 0,
+                'manual_under_review_candidates': summary['manual_under_review_candidates'] or 0,
+                'manual_approved_candidates': summary['manual_approved_candidates'] or 0,
+                'manual_rejected_candidates': summary['manual_rejected_candidates'] or 0,
+                'interest_suggested_candidates': summary['interest_suggested_candidates'] or 0,
+                'interest_interested_candidates': summary['interest_interested_candidates'] or 0,
+                'interest_under_review_candidates': summary['interest_under_review_candidates'] or 0,
+                'interest_approved_candidates': summary['interest_approved_candidates'] or 0,
+                'interest_rejected_candidates': summary['interest_rejected_candidates'] or 0,
             },
             'by_source': [
-                {'source': ResearchCandidate.Source.MANUAL, 'count': summary['manual_candidates'] or 0},
-                {'source': ResearchCandidate.Source.AI, 'count': summary['ai_candidates'] or 0},
-                {'source': ResearchCandidate.Source.INTEREST, 'count': summary['interest_candidates'] or 0},
+                {'source': ResearchCandidate.Source.MANUAL, 'count': (summary['manual_suggested_candidates'] or 0) + (summary['manual_interested_candidates'] or 0) + (summary['manual_under_review_candidates'] or 0) + (summary['manual_approved_candidates'] or 0) + (summary['manual_rejected_candidates'] or 0)},
+                {'source': ResearchCandidate.Source.AI, 'count': (summary['ai_suggested_candidates'] or 0) + (summary['ai_interested_candidates'] or 0) + (summary['ai_under_review_candidates'] or 0) + (summary['ai_approved_candidates'] or 0) + (summary['ai_rejected_candidates'] or 0)},
+                {'source': ResearchCandidate.Source.INTEREST, 'count': (summary['interest_suggested_candidates'] or 0) + (summary['interest_interested_candidates'] or 0) + (summary['interest_under_review_candidates'] or 0) + (summary['interest_approved_candidates'] or 0) + (summary['interest_rejected_candidates'] or 0)},
             ],
             'by_status': [
-                {'status': ResearchCandidate.CandidateStatus.SUGGESTED, 'count': summary['suggested_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.INTERESTED, 'count': summary['interested_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW, 'count': summary['under_review_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.APPROVED, 'count': summary['approved_candidates'] or 0},
-                {'status': ResearchCandidate.CandidateStatus.REJECTED, 'count': summary['rejected_candidates'] or 0},
+                {'status': ResearchCandidate.CandidateStatus.SUGGESTED, 'count': (summary['ai_suggested_candidates'] or 0) + (summary['manual_suggested_candidates'] or 0) + (summary['interest_suggested_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.INTERESTED, 'count': (summary['ai_interested_candidates'] or 0) + (summary['manual_interested_candidates'] or 0) + (summary['interest_interested_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.UNDER_REVIEW, 'count': (summary['ai_under_review_candidates'] or 0) + (summary['manual_under_review_candidates'] or 0) + (summary['interest_under_review_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.APPROVED, 'count': (summary['ai_approved_candidates'] or 0) + (summary['manual_approved_candidates'] or 0) + (summary['interest_approved_candidates'] or 0)},
+                {'status': ResearchCandidate.CandidateStatus.REJECTED, 'count': (summary['ai_rejected_candidates'] or 0) + (summary['manual_rejected_candidates'] or 0) + (summary['interest_rejected_candidates'] or 0)},
             ],
+            'by_source_status': _candidate_source_status_rows(summary),
             'researches': [
                 {
                     'research_id': row.id_research,
