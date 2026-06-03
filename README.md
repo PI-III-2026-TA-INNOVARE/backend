@@ -355,6 +355,10 @@ Todos os endpoints requerem autenticação ✅
 | `GET` | `/api/research/my-interests/` | Listar pesquisas de interesse do pesquisador autenticado |
 | `GET` | `/api/research/my-suggestions/` | Listar sugestões manuais recebidas de empresas para o pesquisador autenticado |
 | `GET` | `/api/research/my-recommendations/` | Listar pesquisas recomendadas por IA para o pesquisador autenticado |
+| `POST` | `/api/research/my-suggestions/{candidate_id}/accept/` | Pesquisador aceita uma sugestão de empresa |
+| `POST` | `/api/research/my-suggestions/{candidate_id}/reject/` | Pesquisador rejeita uma sugestão de empresa |
+| `POST` | `/api/research/my-recommendations/{candidate_id}/accept/` | Pesquisador aceita uma recomendação da IA |
+| `POST` | `/api/research/my-recommendations/{candidate_id}/reject/` | Pesquisador rejeita uma recomendação da IA |
 
 #### Parâmetros de query para listagem de candidatos
 
@@ -427,10 +431,22 @@ GET /api/research/my-interests/
 Authorization: Bearer <token>
 ```
 
-#### Listar sugestões manuais recebidas de empresas
+#### Listar sugestões recebidas de empresas
 
 ```
 GET /api/research/my-suggestions/
+Authorization: Bearer <token>
+```
+
+#### Aceitar ou recusar sugestões de empresas
+
+```
+POST /api/research/my-suggestions/{candidate_id}/accept/
+Authorization: Bearer <token>
+```
+
+```
+POST /api/research/my-suggestions/{candidate_id}/reject/
 Authorization: Bearer <token>
 ```
 
@@ -438,6 +454,18 @@ Authorization: Bearer <token>
 
 ```
 GET /api/research/my-recommendations/?refresh=true
+Authorization: Bearer <token>
+```
+
+#### Aceitar ou recusar recomendações da IA
+
+```
+POST /api/research/my-recommendations/{candidate_id}/accept/
+Authorization: Bearer <token>
+```
+
+```
+POST /api/research/my-recommendations/{candidate_id}/reject/
 Authorization: Bearer <token>
 ```
 
@@ -472,6 +500,47 @@ Opcionalmente, a empresa pode filtrar um painel por pesquisa específica:
 GET /api/dashboard/company/?research_id=123
 Authorization: Bearer <token>
 ```
+
+#### Estrutura do retorno
+
+Os dois painéis usam as rotas acima, com o payload incluindo detalhes sobre o funil de candidatos:
+
+- `summary.total_candidates`
+- `summary.average_score`
+- contadores separados por origem e status:
+  - `summary.ai_suggested_candidates`
+  - `summary.ai_interested_candidates`
+  - `summary.ai_under_review_candidates`
+  - `summary.ai_approved_candidates`
+  - `summary.ai_rejected_candidates`
+  - `summary.manual_suggested_candidates`
+  - `summary.manual_interested_candidates`
+  - `summary.manual_under_review_candidates`
+  - `summary.manual_approved_candidates`
+  - `summary.manual_rejected_candidates`
+  - `summary.interest_suggested_candidates`
+  - `summary.interest_interested_candidates`
+  - `summary.interest_under_review_candidates`
+  - `summary.interest_approved_candidates`
+  - `summary.interest_rejected_candidates`
+- `by_source`: total consolidado por origem
+- `by_status`: total consolidado por status
+- `by_source_status`: detalhamento de origem + status
+
+No painel da empresa, o retorno também inclui:
+
+- `researches`: lista de pesquisas da empresa com:
+  - `total_candidates`
+  - `average_score`
+  - contadores por `source`
+  - contadores por `status`
+
+É possível acompanhar visualmente o fluxo completo:
+
+1. IA sugeriu.
+2. Empresa sugeriu manualmente.
+3. Pesquisador aceitou ou rejeitou.
+4. Empresa passou para análise, aprovou ou rejeitou.
 
 ---
 
