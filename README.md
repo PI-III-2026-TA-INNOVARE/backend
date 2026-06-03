@@ -619,22 +619,21 @@ Authorization: Bearer <token>
 
 ---
 
-### Notifications (Notificações)
+### Notificações (E-mail)
 
-Todos os endpoints requerem autenticação ✅
+O sistema de notificações funciona de forma assíncrona via **Celery**. Não existem rotas de API para consulta de notificações, pois elas são enviadas diretamente para o e-mail cadastrado do usuário quando eventos importantes ocorrem.
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/api/notificacoes/` | Listar notificações do usuário |
-| `POST` | `/api/notificacoes/{id}/marcar_como_lido/` | Marcar uma notificação como lida |
-| `POST` | `/api/notificacoes/marcar_todas_como_lidas/` | Marcar todas como lidas |
+| Evento | Destinatário | Gatilho |
+|--------|--------------|---------|
+| **Proposta Recebida** | Empresa | Quando um pesquisador envia uma proposta manual. |
+| **Interesse Demonstrado** | Empresa | Quando um pesquisador clica em "Tenho Interesse" em uma pesquisa. |
+| **Status Alterado** | Pesquisador | Quando a empresa aprova, recusa ou coloca uma proposta em revisão. |
+| **Match Encontrado** | Pesquisador | Quando o algoritmo de IA encontra uma pesquisa compatível com o perfil. |
 
-#### Marcar como lida
-
-```json
-POST /api/notificacoes/{id}/marcar_como_lido/
-Authorization: Bearer <token>
-```
+As notificações dependem de:
+1.  **Redis** rodando como Broker.
+2.  **Worker Celery** ativo (`celery -A config worker`).
+3.  Configuração `SEND_NOTIFICATION_EMAILS=True` no `.env`.
 
 ---
 
