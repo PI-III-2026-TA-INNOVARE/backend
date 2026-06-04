@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.research_area',
     'apps.users',
     'apps.dashboard',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [

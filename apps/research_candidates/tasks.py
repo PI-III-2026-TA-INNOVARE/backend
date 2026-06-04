@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from apps.research_candidates.services import run_match_for_research, run_match_for_researcher
 from apps.users.models import User
+from apps.notifications.models import Notification
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 3})
 def run_match_for_research_task(self, research_id):
@@ -17,15 +18,28 @@ def run_match_for_researcher_task(self, researcher_id):
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 2})
 def send_notification_email_task(self, user_id, tipo, titulo, mensagem, candidate_id=None):
     """
-    Envia email de notificação para o usuário.
-    Recebe os dados diretamente sem depender da tabela Notification.
+    Persiste a notificacao no banco de dados e envia email de notificacao para o usuario.
     """
     try:
         user = User.objects.get(id_user=user_id)
     except User.DoesNotExist:
-        return {'status': 'error', 'message': 'Usuário não encontrado'}
+        return {'status': 'error', 'message': 'Usuario nao encontrado'}
 
-    # Templates por tipo de notificação
+    # 1. Persiste no banco para a API
+    try:
+        Notification.objects.create(
+            user=user,
+            type=tipo,
+            title=titulo,
+            message=mensagem,
+            related_id=candidate_id
+        )
+    except Exception as e:
+        print(f"Erro ao salvar notificacao no banco: {str(e)}")
+
+    # 2. Prepara e envia o email
+    if not getattr(settings, 'SEND_NOTIFICATION_EMAILS', True):
+        return {'status': 'success', 'message': 'Notificacao salva no banco (email desativado)'}
     templates = {
         'proposta_recebida': 'emails/notification_proposal_received.html',
         'status_alterado': 'emails/notification_status_changed.html',
@@ -63,3 +77,4 @@ def send_notification_email_task(self, user_id, tipo, titulo, mensagem, candidat
         return {'status': 'success', 'message': f'Email enviado para {user.email}'}
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
+
