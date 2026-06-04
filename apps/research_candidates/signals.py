@@ -2,11 +2,10 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from apps.research_candidates.models import ResearchCandidate
 from apps.research_candidates.tasks import send_notification_email_task
-from django.conf import settings
 
 @receiver(pre_save, sender=ResearchCandidate)
 def track_candidate_status_before_save(sender, instance, **kwargs):
-    """Armazena o status anterior para detectar mudanças no post_save"""
+    """Armazena o status anterior para detectar mudancas no post_save."""
     if instance.pk:
         try:
             old_instance = ResearchCandidate.objects.get(pk=instance.pk)
@@ -20,22 +19,16 @@ def track_candidate_status_before_save(sender, instance, **kwargs):
 def handle_research_candidate_lifecycle(sender, instance, created, **kwargs):
     """
     Handler consolidado para todos os eventos do lifecycle de ResearchCandidate.
-    Dispara notificações por email.
+    Dispara notificacoes por email e persiste notificacoes para a API.
     """
-    if not getattr(settings, 'SEND_NOTIFICATION_EMAILS', True):
-        return
-
-    # ==== PROPOSTA MANUAL OU INTERESSE CRIADO ====
     if created and instance.source in ['manual', 'interest']:
         _notify_company_on_proposal_received(instance)
         return
 
-    # ==== MATCH AUTOMÁTICO CRIADO ====
     if created and instance.source == 'ai':
         _notify_researcher_on_ai_match(instance)
         return
 
-    # ==== MUDANÇA DE STATUS (para qualquer source) ====
     if not created:
         old_status = getattr(instance, '_old_status', None)
         if old_status and old_status != instance.status:
@@ -43,7 +36,7 @@ def handle_research_candidate_lifecycle(sender, instance, created, **kwargs):
 
 
 def _notify_company_on_proposal_received(candidate):
-    """Notifica empresa quando pesquisador envia proposta ou demonstra interesse"""
+    """Notifica empresa quando pesquisador envia proposta ou demonstra interesse."""
     empresa = candidate.research.company
     pesquisador = candidate.researcher
 
@@ -51,7 +44,7 @@ def _notify_company_on_proposal_received(candidate):
         return
 
     action_text = "enviou uma proposta" if candidate.source == 'manual' else "demonstrou interesse"
-    titulo = f'Nova interação em: {candidate.research.title}'
+    titulo = f'Nova interacao em: {candidate.research.title}'
     mensagem = f'{pesquisador.name} {action_text} para seu desafio "{candidate.research.title}"'
     
     send_notification_email_task.delay(
@@ -64,7 +57,7 @@ def _notify_company_on_proposal_received(candidate):
 
 
 def _notify_researcher_on_status_changed(candidate):
-    """Notifica pesquisador quando status de sua candidatura muda"""
+    """Notifica pesquisador quando status de sua candidatura muda."""
     pesquisador = candidate.researcher
 
     if not pesquisador.user:
@@ -73,14 +66,14 @@ def _notify_researcher_on_status_changed(candidate):
     status_labels = {
         'suggested': 'Sugerida',
         'interested': 'Interessada',
-        'under_review': 'Em Revisão',
+        'under_review': 'Em Revisao',
         'approved': 'Aprovada',
         'rejected': 'Recusada',
     }
 
     status_msg = status_labels.get(candidate.status, candidate.status)
-    titulo = f'Atualização: {candidate.research.title}'
-    mensagem = f'O status da sua participação em "{candidate.research.title}" mudou para: {status_msg}'
+    titulo = f'Atualizacao: {candidate.research.title}'
+    mensagem = f'O status da sua participacao em "{candidate.research.title}" mudou para: {status_msg}'
 
     send_notification_email_task.delay(
         user_id=pesquisador.user.id_user,
@@ -92,7 +85,7 @@ def _notify_researcher_on_status_changed(candidate):
 
 
 def _notify_researcher_on_ai_match(candidate):
-    """Notifica pesquisador quando matching IA o sugere para uma pesquisa"""
+    """Notifica pesquisador quando matching IA o sugere para uma pesquisa."""
     pesquisador = candidate.researcher
 
     if not pesquisador.user:
@@ -109,3 +102,4 @@ def _notify_researcher_on_ai_match(candidate):
         mensagem=mensagem,
         candidate_id=candidate.id_candidate
     )
+

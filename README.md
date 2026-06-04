@@ -690,9 +690,9 @@ Authorization: Bearer <token>
 
 ---
 
-### Notificações (E-mail)
+### Notificações (E-mail e API)
 
-O sistema de notificações funciona de forma assíncrona via **Celery**. Não existem rotas de API para consulta de notificações, pois elas são enviadas diretamente para o e-mail cadastrado do usuário quando eventos importantes ocorrem.
+O sistema de notificações funciona de forma assíncrona via **Celery**. Quando um evento importante ocorre, a notificação é persistida no banco para consulta pela API e, se `SEND_NOTIFICATION_EMAILS=True`, também é enviada para o e-mail cadastrado do usuário.
 
 | Evento | Destinatário | Gatilho |
 |--------|--------------|---------|
@@ -701,10 +701,102 @@ O sistema de notificações funciona de forma assíncrona via **Celery**. Não e
 | **Status Alterado** | Pesquisador | Quando a empresa aprova, recusa ou coloca uma proposta em revisão. |
 | **Match Encontrado** | Pesquisador | Quando o algoritmo de IA encontra uma pesquisa compatível com o perfil. |
 
-As notificações dependem de:
+#### API de notificações
+
+Todos os endpoints requerem autenticação.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/notifications/` | Listar notificações do usuário autenticado |
+| `GET` | `/api/notifications/{id}/` | Buscar uma notificação do usuário autenticado |
+| `GET` | `/api/notifications/?is_read=false` | Filtrar notificações não lidas |
+| `GET` | `/api/notifications/?type=status_alterado` | Filtrar por tipo de notificação |
+| `GET` | `/api/notifications/unread-count/` | Retornar quantidade de não lidas |
+| `POST` | `/api/notifications/{id}/mark-as-read/` | Marcar uma notificação como lida |
+| `POST` | `/api/notifications/{id}/mark-as-unread/` | Marcar uma notificação como não lida |
+| `POST` | `/api/notifications/mark-all-as-read/` | Marcar todas como lidas |
+| `POST` | `/api/notifications/mark-all-as-unread/` | Marcar todas como não lidas |
+
+#### Exemplo de resposta
+
+```json
+{
+  "id": 1,
+  "type": "status_alterado",
+  "title": "Atualização: Pesquisa XPTO",
+  "message": "O status da sua participação mudou para: Aprovada",
+  "is_read": false,
+  "created_at": "2026-06-04T15:00:00Z",
+  "related_id": 10
+}
+```
+
+#### Exemplos com curl
+
+Use estes exemplos no terminal, Postman ou Insomnia. Substitua `<access_token>` pelo token retornado no login e `{id}` pelo ID da notificação.
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/auth/token/" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"usuario@email.com\",\"password\":\"sua_senha\"}"
+```
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/notifications/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/notifications/?is_read=false" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/notifications/?type=novo_match_disponivel" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/notifications/unread-count/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/notifications/{id}/mark-as-read/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/notifications/{id}/mark-as-unread/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/notifications/mark-all-as-read/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/notifications/mark-all-as-unread/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+#### Teste manual de e-mail de match
+
+Para disparar uma notificação de match manualmente, use um `id_user` existente:
+
+```bash
+python manage.py shell -c "from apps.research_candidates.tasks import send_notification_email_task; print(send_notification_email_task.apply(args=[1, 'novo_match_disponivel', 'Nova oportunidade de pesquisa: Teste de Match', 'Sistema encontrou compatibilidade 87% com sua expertise em Teste de Match.', None]).get())"
+```
+
+Esse comando cria a notificação no banco e envia o e-mail se `SEND_NOTIFICATION_EMAILS=True`.
+
+As notificações por e-mail dependem de:
 1.  **Redis** rodando como Broker.
 2.  **Worker Celery** ativo (`celery -A config worker`).
 3.  Configuração `SEND_NOTIFICATION_EMAILS=True` no `.env`.
+
+Mesmo com `SEND_NOTIFICATION_EMAILS=False`, as notificações continuam sendo salvas e podem ser consultadas pela API.
 
 ---
 
