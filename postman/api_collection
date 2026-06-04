@@ -2519,6 +2519,139 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "accept/reject suggestions/recommendations (researcher)",
+      "item": [
+        {
+          "name": "reject suggestion (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{researcher1_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}} /api/research/my-suggestions/{{id}}/reject/",
+              "host": [
+                "{{baseURL}} "
+              ],
+              "path": [
+                "api",
+                "research",
+                "my-suggestions",
+                "{{id_candidate}}",
+                "reject",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "accept suggestion (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{researcher1_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}} /api/research/my-suggestions/{{id}}/accept/",
+              "host": [
+                "{{baseURL}} "
+              ],
+              "path": [
+                "api",
+                "research",
+                "my-suggestions",
+                "{{id_candidate}}",
+                "accept",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reject recommendation (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{researcher1_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}} /api/research/my-recommendations/{{id}}/reject/",
+              "host": [
+                "{{baseURL}} "
+              ],
+              "path": [
+                "api",
+                "research",
+                "my-recommendations",
+                "{{id_candidate}}",
+                "reject",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "accept recommendation (researcher)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{researcher1_access}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}} /api/research/my-recommendations/{{id}}/accept/",
+              "host": [
+                "{{baseURL}} "
+              ],
+              "path": [
+                "api",
+                "research",
+                "my-recommendations",
+                "{{id_candidate}}",
+                "accept",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
@@ -2564,6 +2697,10 @@
     },
     {
       "key": "company_access",
+      "value": ""
+    },
+    {
+      "key": "id_candidate",
       "value": ""
     },
     {
