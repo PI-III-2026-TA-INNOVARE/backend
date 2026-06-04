@@ -4,4 +4,4 @@ class ResearchCandidatesConfig(AppConfig):
     name = 'apps.research_candidates'
 
     def ready(self):
-        from apps.research_candidates import signals  # noqa: F401
+        from apps.research_candidates import signals

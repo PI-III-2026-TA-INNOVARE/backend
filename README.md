@@ -359,6 +359,8 @@ Todos os endpoints requerem autenticação ✅
 | `POST` | `/api/research/my-suggestions/{candidate_id}/reject/` | Pesquisador rejeita uma sugestão de empresa |
 | `POST` | `/api/research/my-recommendations/{candidate_id}/accept/` | Pesquisador aceita uma recomendação da IA |
 | `POST` | `/api/research/my-recommendations/{candidate_id}/reject/` | Pesquisador rejeita uma recomendação da IA |
+| `GET/POST/PUT/PATCH/DELETE` | `/api/propostas/` | CRUD de propostas manuais |
+| `GET` | `/api/propostas/minhas_propostas/` | Lista propostas do pesquisador autenticado |
 
 #### Parâmetros de query para listagem de candidatos
 
@@ -685,6 +687,24 @@ Authorization: Bearer <token>
 GET /api/search/researchers/?q=especialista em interpretar dados visuais para controle de qualidade fabril&limit=5
 Authorization: Bearer <token>
 ```
+
+---
+
+### Notificações (E-mail)
+
+O sistema de notificações funciona de forma assíncrona via **Celery**. Não existem rotas de API para consulta de notificações, pois elas são enviadas diretamente para o e-mail cadastrado do usuário quando eventos importantes ocorrem.
+
+| Evento | Destinatário | Gatilho |
+|--------|--------------|---------|
+| **Proposta Recebida** | Empresa | Quando um pesquisador envia uma proposta manual. |
+| **Interesse Demonstrado** | Empresa | Quando um pesquisador clica em "Tenho Interesse" em uma pesquisa. |
+| **Status Alterado** | Pesquisador | Quando a empresa aprova, recusa ou coloca uma proposta em revisão. |
+| **Match Encontrado** | Pesquisador | Quando o algoritmo de IA encontra uma pesquisa compatível com o perfil. |
+
+As notificações dependem de:
+1.  **Redis** rodando como Broker.
+2.  **Worker Celery** ativo (`celery -A config worker`).
+3.  Configuração `SEND_NOTIFICATION_EMAILS=True` no `.env`.
 
 ---
 

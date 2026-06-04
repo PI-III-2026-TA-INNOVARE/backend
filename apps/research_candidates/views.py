@@ -1,14 +1,20 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 
 from django.conf import settings
-from django.db.models import Q
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, response, status, views
+from rest_framework import generics, permissions, response, status, views, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
+
 from apps.research.models import Research
+from apps.users.models import User
+
 from .models import ResearchCandidate
 from .serializers import (
+    PropostaSerializer,
     ResearchCandidateCreateSerializer,
     ResearchCandidateSerializer,
     ResearchCandidateStatusUpdateSerializer,
@@ -17,9 +23,8 @@ from .serializers import (
     ResearcherInterestListSerializer,
     ResearcherRecommendationListSerializer,
 )
-from .services import run_match_for_research, run_match_for_researcher
-from .tasks import run_match_for_research_task
-from apps.users.models import User
+from .services import run_match_for_researcher
+
 
 class _ResearchCompanyOwnerMixin:
     def get_research(self):
@@ -33,6 +38,7 @@ class _ResearchCompanyOwnerMixin:
         ):
             raise PermissionDenied('Somente a empresa dona da pesquisa pode acessar candidatos.')
         return research
+
 
 class ResearchCandidatesListView(_ResearchCompanyOwnerMixin, generics.ListCreateAPIView):
     serializer_class = ResearchCandidateSerializer
@@ -98,10 +104,10 @@ class ResearchCandidatesListView(_ResearchCompanyOwnerMixin, generics.ListCreate
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+
 class ResearchCandidateStatusUpdateView(_ResearchCompanyOwnerMixin, generics.UpdateAPIView):
     serializer_class = ResearchCandidateStatusUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['patch']
 
     def get_object(self):
         research = self.get_research()
@@ -110,13 +116,14 @@ class ResearchCandidateStatusUpdateView(_ResearchCompanyOwnerMixin, generics.Upd
             pk=self.kwargs['candidate_id'],
         )
 
+
 class ResearchInterestCreateView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         user = request.user
         if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
-            raise PermissionDenied('Apenas usuários do tipo pesquisador podem demonstrar interesse.')
+            raise PermissionDenied('Apenas usuarios do tipo pesquisador podem demonstrar interesse.')
 
         research = get_object_or_404(Research, pk=pk)
         payload = ResearchInterestSerializer(data=request.data)
@@ -149,6 +156,7 @@ class ResearchInterestCreateView(views.APIView):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+
 class ResearchMyInterestsView(generics.ListAPIView):
     serializer_class = ResearcherInterestListSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -156,7 +164,7 @@ class ResearchMyInterestsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
-            raise PermissionDenied('Apenas usuarios pesquisador podem acessar seus interesses.')
+            raise PermissionDenied('Apenas usuarios pesquisador podem acessar seus ინტერესos.')
 
         return (
             ResearchCandidate.objects.select_related('research')
@@ -176,7 +184,7 @@ class ResearchMySuggestionsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
-            raise PermissionDenied('Apenas usuário pesquisador pode acessar suas sugestões.')
+            raise PermissionDenied('Apenas usuario pesquisador pode acessar suas sugestoes.')
 
         return (
             ResearchCandidate.objects.select_related('research')
@@ -254,7 +262,7 @@ class ResearcherRecommendationsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.id_type != User.UserType.PESQUISADOR or not hasattr(user, 'researcher_profile'):
-            raise PermissionDenied('Apenas usuário pesquisador pode acessar recomendações.')
+            raise PermissionDenied('Apenas usuario pesquisador pode acessar recomendacoes.')
 
         refresh = self.request.query_params.get('refresh')
         if str(refresh).strip().lower() in {'1', 'true', 'sim', 'yes'}:
@@ -282,30 +290,44 @@ class ResearcherRecommendationsView(generics.ListAPIView):
             .order_by('-score_match', '-updated_at')
         )
 
+
 class ResearchMatchRunView(_ResearchCompanyOwnerMixin, views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         research = self.get_research()
-        if getattr(settings, 'AI_MATCH_ASYNC_ENABLED', False):
-            task = run_match_for_research_task.delay(research.id_research)
-            payload = {
-                'research_id': research.id_research,
-                'job_id': task.id,
-                'status': 'queued',
-                'updated': 0,
-                'removed': 0,
-            }
-            serializer = ResearchMatchRunResponseSerializer(payload)
-            return response.Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        from .tasks import run_match_for_research_task
 
-        result = run_match_for_research(research.id_research)
-        payload = {
-            'research_id': research.id_research,
-            'job_id': result.get('run_id'),
-            'status': 'done' if result.get('ok') else 'error',
-            'updated': result.get('updated', 0),
-            'removed': result.get('removed', 0),
-        }
-        serializer = ResearchMatchRunResponseSerializer(payload)
-        return response.Response(serializer.data, status=status.HTTP_200_OK if result.get('ok') else status.HTTP_400_BAD_REQUEST)
+        run_match_for_research_task.delay(research.id_research)
+
+        return response.Response(
+            {'status': 'Matching process started in background'},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class PropostaViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gerenciar propostas (ResearchCandidate com source='manual').
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PropostaSerializer
+
+    def get_queryset(self):
+        return ResearchCandidate.objects.filter(source='manual')
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data['source'] = 'manual'
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=False, methods=['get'])
+    def minhas_propostas(self, request):
+        propostas = self.get_queryset().filter(researcher__user=request.user)
+        serializer = self.get_serializer(propostas, many=True)
+        return Response(serializer.data)
+

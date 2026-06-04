@@ -188,3 +188,20 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@pdconnect.com
 
 # Frontend URL for password reset link
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+# Celery Configuration
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Notification & AI Matching Settings
+SEND_NOTIFICATION_EMAILS = config('SEND_NOTIFICATION_EMAILS', default=True, cast=bool)
+AI_MATCH_ASYNC_ENABLED = config('AI_MATCH_ASYNC_ENABLED', default=True, cast=bool)
+AI_MATCH_LIMIT_PER_RESEARCH = config('AI_MATCH_LIMIT_PER_RESEARCH', default=30, cast=int)
+AI_MATCH_LIMIT_PER_RESEARCHER = config('AI_MATCH_LIMIT_PER_RESEARCHER', default=30, cast=int)
+AI_MATCH_MIN_SCORE = config('AI_MATCH_MIN_SCORE', default=0.30, cast=float)
+AI_MATCH_RERANK_ENABLED = config('AI_MATCH_RERANK_ENABLED', default=False, cast=bool)
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')

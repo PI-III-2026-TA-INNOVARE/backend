@@ -150,7 +150,7 @@ def _gemini_rerank(reference_text, candidates, direction):
             resp.raise_for_status()
             body = resp.json()
     except Exception as exc:
-        logger.warning('Gemini rerank indisponivel. Usando somente base ;;;MiniLM. erro=%s', exc)
+        logger.warning('Gemini rerank indisponivel. Usando somente base MiniLM. erro=%s', exc)
         return {}
 
     text_parts = []

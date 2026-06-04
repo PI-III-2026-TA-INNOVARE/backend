@@ -1,19 +1,26 @@
-from django.urls import path
+﻿from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
 from .views import (
-    ResearchCandidatesListView,
+    PropostaViewSet,
     ResearchCandidateStatusUpdateView,
+    ResearchCandidatesListView,
     ResearchInterestCreateView,
     ResearchMatchRunView,
     ResearchMyInterestsView,
-    ResearchMySuggestionAcceptView,
-    ResearchMySuggestionRejectView,
-    ResearchMySuggestionsView,
     ResearchMyRecommendationAcceptView,
     ResearchMyRecommendationRejectView,
+    ResearchMySuggestionsView,
+    ResearchMySuggestionAcceptView,
+    ResearchMySuggestionRejectView,
     ResearcherRecommendationsView,
 )
 
+router = DefaultRouter()
+router.register(r'propostas', PropostaViewSet, basename='proposta')
+
 urlpatterns = [
+    path('', include(router.urls)),
     path('research/my-interests/', ResearchMyInterestsView.as_view(), name='research-my-interests'),
     path('research/my-suggestions/', ResearchMySuggestionsView.as_view(), name='research-my-suggestions'),
     path('research/my-recommendations/', ResearcherRecommendationsView.as_view(), name='research-my-recommendations'),
