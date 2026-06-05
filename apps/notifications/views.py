@@ -31,10 +31,12 @@ class NotificationViewSet(mixins.ListModelMixin,
 
     @action(detail=True, methods=['post'], url_path='mark-as-read')
     def mark_as_read(self, request, pk=None):
+        from django.utils import timezone
         notification = self.get_object()
         if not notification.is_read:
             notification.is_read = True
-            notification.save(update_fields=['is_read'])
+            notification.read_at = timezone.now()
+            notification.save(update_fields=['is_read', 'read_at'])
         return Response(NotificationSerializer(notification).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='mark-as-unread')

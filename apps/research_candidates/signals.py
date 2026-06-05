@@ -97,7 +97,7 @@ def _notify_researcher_on_ai_match(candidate):
 
     send_notification_email_task.delay(
         user_id=pesquisador.user.id_user,
-        tipo='novo_match_disponivel',
+        tipo='novo_match',
         titulo=titulo,
         mensagem=mensagem,
         candidate_id=candidate.id_candidate

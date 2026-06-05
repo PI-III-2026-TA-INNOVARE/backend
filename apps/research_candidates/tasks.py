@@ -44,7 +44,7 @@ def send_notification_email_task(self, user_id, tipo, titulo, mensagem, candidat
         'proposta_recebida': 'emails/notification_proposal_received.html',
         'status_alterado': 'emails/notification_status_changed.html',
         'match_automatico': 'emails/notification_ai_match.html',
-        'novo_match_disponivel': 'emails/notification_new_match.html',
+        'novo_match': 'emails/notification_new_match.html',
         'deadline_proximo': 'emails/notification_deadline.html',
         'feedback_recebido': 'emails/notification_feedback.html',
         'pesquisa_atualizada': 'emails/notification_research_updated.html',

@@ -14,6 +14,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             'message',
             'is_read',
             'created_at',
+            'read_at',
             'related_id',
         ]
         read_only_fields = fields
