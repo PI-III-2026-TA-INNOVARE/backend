@@ -21,12 +21,17 @@ def handle_research_candidate_lifecycle(sender, instance, created, **kwargs):
     Handler consolidado para todos os eventos do lifecycle de ResearchCandidate.
     Dispara notificacoes por email e persiste notificacoes para a API.
     """
-    if created and instance.source in ['manual', 'interest']:
-        _notify_company_on_proposal_received(instance)
-        return
-
-    if created and instance.source == 'ai':
-        _notify_researcher_on_ai_match(instance)
+    if created:
+        if instance.source == ResearchCandidate.Source.AI:
+            _notify_researcher_on_ai_match(instance)
+        elif instance.source == ResearchCandidate.Source.INTEREST:
+            _notify_company_on_proposal_received(instance)
+        elif instance.source == ResearchCandidate.Source.MANUAL:
+            # Distingue se foi a empresa sugerindo (status under_review) ou pesquisador propondo (default/suggested)
+            if instance.status == ResearchCandidate.CandidateStatus.UNDER_REVIEW:
+                _notify_researcher_on_company_suggestion(instance)
+            else:
+                _notify_company_on_proposal_received(instance)
         return
 
     if not created:
@@ -43,13 +48,33 @@ def _notify_company_on_proposal_received(candidate):
     if not empresa.user:
         return
 
-    action_text = "enviou uma proposta" if candidate.source == 'manual' else "demonstrou interesse"
+    action_text = "enviou uma proposta" if candidate.source == ResearchCandidate.Source.MANUAL else "demonstrou interesse"
     titulo = f'Nova interacao em: {candidate.research.title}'
     mensagem = f'{pesquisador.name} {action_text} para seu desafio "{candidate.research.title}"'
     
     send_notification_email_task.delay(
         user_id=empresa.user.id_user,
         tipo='proposta_recebida',
+        titulo=titulo,
+        mensagem=mensagem,
+        candidate_id=candidate.id_candidate
+    )
+
+
+def _notify_researcher_on_company_suggestion(candidate):
+    """Notifica pesquisador quando a empresa o seleciona/sugere manualmente para uma pesquisa."""
+    pesquisador = candidate.researcher
+
+    if not pesquisador.user:
+        return
+
+    empresa_nome = candidate.research.company.legal_name or candidate.research.company.name
+    titulo = f'Convite para pesquisa: {candidate.research.title}'
+    mensagem = f'A empresa {empresa_nome} selecionou seu perfil para participar do desafio "{candidate.research.title}".'
+
+    send_notification_email_task.delay(
+        user_id=pesquisador.user.id_user,
+        tipo='novo_match',
         titulo=titulo,
         mensagem=mensagem,
         candidate_id=candidate.id_candidate
